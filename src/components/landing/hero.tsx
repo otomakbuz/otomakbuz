@@ -3,10 +3,16 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { DashboardMockup } from "./dashboard-mockup";
 import { AnnouncementDialog } from "./announcement-dialog";
+import { Hero3D } from "./hero-3d";
 
 export function Hero() {
   return (
     <section className="relative overflow-hidden bg-paper">
+      {/* 3D arka plan sahnesi — telefon + süzülen fişler */}
+      <div className="absolute inset-0 h-[min(900px,100vh)] opacity-90">
+        <Hero3D />
+      </div>
+
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-0">
         <div className="text-center max-w-3xl mx-auto">
           {/* Announcement pill */}
