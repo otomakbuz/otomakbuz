@@ -1,0 +1,186 @@
+<h2>Belge Yukleme Akisi - Anlik OCR</h2>
+<p class="subtitle">Yukle → Tara → Goster → Kaydet (tek ekran, aninda sonuc)</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Anlik OCR Akisi</div>
+    <div class="mockup-body" style="padding: 24px; font-family: system-ui;">
+
+      <!-- Step 1 -->
+      <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
+        <div style="background: #0284c7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">1</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 4px;">Dosya Sec / Suruklei</div>
+          <div style="font-size: 13px; color: #64748b;">Kullanici drag & drop veya dosya sec ile belge yukler. Coklu yukleme desteklenir.</div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
+        <div style="background: #0284c7; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">2</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 4px;">Storage'a Yukle + OCR Baslat</div>
+          <div style="font-size: 13px; color: #64748b;">Dosya Supabase Storage'a yuklenir, ayni anda OCR adapter'a gonderilir. Ekranda loading/spinner gosterilir.</div>
+          <div style="background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 12px; color: #92400e;">
+            ⏳ "Belgeniz taraniyor..." animasyonu
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
+        <div style="background: #16a34a; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">3</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 4px;">Sonuc Aninda Gosterilir</div>
+          <div style="font-size: 13px; color: #64748b;">OCR tamamlaninca ayni ekranda split-view acilir: sol tarafta belge onizleme, sag tarafta cikarilan alanlar.</div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px;">
+        <div style="background: #16a34a; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">4</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 4px;">Kullanici Dogrular & Duzeltir</div>
+          <div style="font-size: 13px; color: #64748b;">Guven skoru dusuk alanlar vurgulanir. Kullanici gerekli alanlari duzeltir, kategori/etiket ekler.</div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div style="display: flex; gap: 16px; align-items: flex-start;">
+        <div style="background: #7c3aed; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0;">5</div>
+        <div style="flex: 1;">
+          <div style="font-weight: 600; font-size: 14px; color: #1e293b; margin-bottom: 4px;">Kaydet</div>
+          <div style="font-size: 13px; color: #64748b;">Belge "verified" olarak kaydedilir. Kullanici bir sonraki belgeye gecer veya listeye doner.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Wireframe -->
+<div class="section" style="margin-top: 24px;">
+  <div class="mockup">
+    <div class="mockup-header">Yukleme + Inceleme Ekrani (Tek Sayfa)</div>
+    <div class="mockup-body" style="padding: 0; min-height: 400px;">
+
+      <!-- State 1: Upload -->
+      <div style="padding: 24px; border-bottom: 2px solid #e2e8f0;">
+        <div style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">Adim 1 - Yukleme</div>
+        <div style="border: 2px dashed #cbd5e1; border-radius: 12px; padding: 40px; text-align: center; background: #f8fafc;">
+          <div style="font-size: 32px; margin-bottom: 8px;">📄</div>
+          <div style="font-weight: 600; color: #475569;">Dosyalari surukleyin veya tiklayin</div>
+          <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">JPG, PNG, PDF, WEBP • Maks 10MB</div>
+        </div>
+      </div>
+
+      <!-- State 2: Review (appears after OCR) -->
+      <div style="padding: 24px;">
+        <div style="font-size: 12px; font-weight: 600; color: #94a3b8; text-transform: uppercase; margin-bottom: 12px;">Adim 2 - OCR Sonucu (otomatik acilir)</div>
+        <div style="display: flex; gap: 16px; min-height: 280px;">
+
+          <!-- Left: Preview -->
+          <div style="flex: 1; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid #e2e8f0;">
+            <div style="text-align: center; color: #94a3b8;">
+              <div style="font-size: 48px; margin-bottom: 8px;">🧾</div>
+              <div style="font-size: 13px;">Belge Onizleme</div>
+            </div>
+          </div>
+
+          <!-- Right: Extracted fields -->
+          <div style="flex: 1; font-size: 13px;">
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #16a34a;">
+                <div><span style="color: #64748b;">Firma:</span> <strong>Migros A.S.</strong></div>
+                <div style="font-size: 11px; color: #16a34a;">%95</div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #16a34a;">
+                <div><span style="color: #64748b;">Tarih:</span> <strong>2026-03-15</strong></div>
+                <div style="font-size: 11px; color: #16a34a;">%92</div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #f0fdf4; border-radius: 6px; border-left: 3px solid #16a34a;">
+                <div><span style="color: #64748b;">Toplam:</span> <strong>245,80 TL</strong></div>
+                <div style="font-size: 11px; color: #16a34a;">%97</div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fffbeb; border-radius: 6px; border-left: 3px solid #f59e0b;">
+                <div><span style="color: #64748b;">KDV:</span> <strong>39,33 TL</strong></div>
+                <div style="font-size: 11px; color: #f59e0b;">%78</div>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: #fef2f2; border-radius: 6px; border-left: 3px solid #ef4444;">
+                <div><span style="color: #64748b;">Belge No:</span> <strong style="color: #ef4444;">???</strong></div>
+                <div style="font-size: 11px; color: #ef4444;">%45</div>
+              </div>
+
+              <div style="padding: 8px 12px;">
+                <span style="color: #64748b;">Kategori:</span>
+                <select style="margin-left: 8px; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px;">
+                  <option>Market</option>
+                  <option>Yakit</option>
+                  <option>Yemek</option>
+                  <option>Ofis</option>
+                </select>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 8px;">
+                <button style="flex: 1; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;">Kaydet</button>
+                <button style="padding: 10px 16px; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 6px; cursor: pointer;">Yeniden Tara</button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Coklu yukleme -->
+<div class="section" style="margin-top: 24px;">
+  <div class="mockup">
+    <div class="mockup-header">Coklu Yukleme Durumu</div>
+    <div class="mockup-body" style="padding: 24px; font-family: system-ui; font-size: 13px;">
+      <div style="margin-bottom: 12px; color: #64748b;">3 belge yuklendi - sirayla taranir, her biri icin ayri inceleme yapilir:</div>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #f0fdf4; border-radius: 6px;">
+          <span style="color: #16a34a;">&#10003;</span>
+          <span style="flex:1;">fatura-001.pdf</span>
+          <span style="color: #16a34a; font-size: 12px;">Tarandi - Inceleniyor</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #fef3c7; border-radius: 6px;">
+          <span style="color: #f59e0b;">&#9679;</span>
+          <span style="flex:1;">makbuz-mart.jpg</span>
+          <span style="color: #f59e0b; font-size: 12px;">Taraniyor...</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: #f8fafc; border-radius: 6px;">
+          <span style="color: #94a3b8;">&#9679;</span>
+          <span style="flex:1;">fis-kargo.png</span>
+          <span style="color: #94a3b8; font-size: 12px;">Sirada</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Bu akis uygun mu?</h3>
+  <div class="options">
+    <div class="option" data-choice="evet" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Evet, tam istedigim bu</h3>
+        <p>Yukle → Tara → Goster → Kaydet akisi dogru</p>
+      </div>
+    </div>
+    <div class="option" data-choice="degisiklik" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Degisiklik istiyorum</h3>
+        <p>Bazi kisimlar farkli olmali</p>
+      </div>
+    </div>
+  </div>
+</div>

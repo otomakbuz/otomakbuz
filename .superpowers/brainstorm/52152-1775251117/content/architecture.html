@@ -1,0 +1,118 @@
+<h2>Otomakbuz.com - Mimari Tasarim</h2>
+<p class="subtitle">Genel sistem mimarisi ve veri akisi</p>
+
+<div class="section">
+  <div class="mockup">
+    <div class="mockup-header">Sistem Mimarisi</div>
+    <div class="mockup-body" style="padding: 24px; font-family: system-ui;">
+
+      <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px;">
+        <!-- Frontend -->
+        <div style="background: #e0f2fe; border: 2px solid #0284c7; border-radius: 12px; padding: 16px; min-width: 200px; text-align: center;">
+          <div style="font-weight: 700; font-size: 14px; color: #0284c7; margin-bottom: 8px;">FRONTEND</div>
+          <div style="font-size: 13px; color: #334155;">Next.js 14 (App Router)</div>
+          <div style="font-size: 13px; color: #334155;">React + Tailwind CSS</div>
+          <div style="font-size: 13px; color: #334155;">Shadcn/ui</div>
+          <div style="font-size: 13px; color: #334155;">TanStack Table</div>
+        </div>
+
+        <!-- Backend -->
+        <div style="background: #f0fdf4; border: 2px solid #16a34a; border-radius: 12px; padding: 16px; min-width: 200px; text-align: center;">
+          <div style="font-weight: 700; font-size: 14px; color: #16a34a; margin-bottom: 8px;">BACKEND</div>
+          <div style="font-size: 13px; color: #334155;">Next.js Server Actions</div>
+          <div style="font-size: 13px; color: #334155;">API Routes (export)</div>
+          <div style="font-size: 13px; color: #334155;">OCR Adapter Layer</div>
+        </div>
+
+        <!-- Supabase -->
+        <div style="background: #fef3c7; border: 2px solid #d97706; border-radius: 12px; padding: 16px; min-width: 200px; text-align: center;">
+          <div style="font-weight: 700; font-size: 14px; color: #d97706; margin-bottom: 8px;">SUPABASE</div>
+          <div style="font-size: 13px; color: #334155;">PostgreSQL (DB)</div>
+          <div style="font-size: 13px; color: #334155;">Auth (e-posta/sifre)</div>
+          <div style="font-size: 13px; color: #334155;">Storage (belgeler)</div>
+          <div style="font-size: 13px; color: #334155;">Row Level Security</div>
+        </div>
+      </div>
+
+      <!-- Flow -->
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+        <div style="font-weight: 600; font-size: 13px; margin-bottom: 12px; color: #475569;">Belge Isleme Akisi</div>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13px;">
+          <div style="background: #dbeafe; padding: 8px 12px; border-radius: 6px;">1. Kullanici yukler</div>
+          <span style="color: #94a3b8;">&#8594;</span>
+          <div style="background: #dbeafe; padding: 8px 12px; border-radius: 6px;">2. Storage'a kaydet</div>
+          <span style="color: #94a3b8;">&#8594;</span>
+          <div style="background: #dbeafe; padding: 8px 12px; border-radius: 6px;">3. OCR Adapter cagir</div>
+          <span style="color: #94a3b8;">&#8594;</span>
+          <div style="background: #dbeafe; padding: 8px 12px; border-radius: 6px;">4. Sonuclari DB'ye yaz</div>
+          <span style="color: #94a3b8;">&#8594;</span>
+          <div style="background: #dbeafe; padding: 8px 12px; border-radius: 6px;">5. Kullanici dogrular</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <div class="mockup">
+    <div class="mockup-header">Klasor Yapisi</div>
+    <div class="mockup-body" style="padding: 24px; font-family: monospace; font-size: 13px; line-height: 1.8; color: #334155;">
+<pre style="margin: 0;">
+otomakbuz/
+├── src/
+│   ├── app/                    # Next.js App Router sayfalari
+│   │   ├── (landing)/          # Landing page (public)
+│   │   ├── (auth)/             # Login, Register sayfalari
+│   │   │   ├── giris/
+│   │   │   └── kayit/
+│   │   ├── (dashboard)/        # Auth gerektiren sayfalar
+│   │   │   ├── panel/          # Dashboard
+│   │   │   ├── yukle/          # Upload
+│   │   │   ├── belgeler/       # Documents list
+│   │   │   ├── belge/[id]/     # Document detail & review
+│   │   │   ├── raporlar/       # Reports & export
+│   │   │   └── ayarlar/        # Settings
+│   │   ├── layout.tsx
+│   │   └── globals.css
+│   ├── components/
+│   │   ├── ui/                 # Shadcn/ui bilesenler
+│   │   ├── layout/             # Header, Sidebar, Footer
+│   │   ├── documents/          # Belge bilesenler
+│   │   ├── dashboard/          # Dashboard kartlari
+│   │   └── upload/             # Upload bilesenler
+│   ├── lib/
+│   │   ├── supabase/           # Supabase client & helpers
+│   │   ├── ocr/                # OCR adapter interface + mock
+│   │   ├── export/             # CSV & Excel export
+│   │   └── utils.ts
+│   ├── types/                  # TypeScript tipleri
+│   └── hooks/                  # Custom React hooks
+├── public/
+│   └── otomakbuz logo.png
+├── supabase/
+│   └── migrations/             # SQL migration dosyalari
+└── .env.local                  # Supabase keys
+</pre>
+    </div>
+  </div>
+</div>
+
+<div class="section" style="margin-top: 24px;">
+  <h3>Bu mimari yaklasim uygun mu?</h3>
+  <div class="options">
+    <div class="option" data-choice="evet" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>Evet, uygun</h3>
+        <p>Bu yapi ile devam edelim</p>
+      </div>
+    </div>
+    <div class="option" data-choice="degisiklik" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Degisiklik istiyorum</h3>
+        <p>Bazi kisimlar farkli olmali</p>
+      </div>
+    </div>
+  </div>
+</div>
