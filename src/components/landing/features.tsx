@@ -1,28 +1,95 @@
-import { FileText, Search, Download, Shield, Zap, Tags } from "lucide-react";
+import { Scan, BarChart3, Bell, Users } from "lucide-react";
+import { FeatureDialog } from "./feature-dialog";
 
 const features = [
-  { icon: Zap, title: "Anlik OCR", description: "Belgeleriniz yuklendiginde aninda taranir ve veriler cikarilir." },
-  { icon: Shield, title: "Guven Skoru", description: "Her alan icin guven skoru gosterilir. Dusuk skorlu alanlar vurgulanir." },
-  { icon: Tags, title: "Kategori ve Etiket", description: "Belgelerinizi kategorilere ayirin, etiketlerle isaretin." },
-  { icon: Search, title: "Guclu Arama", description: "Firma, tarih, tutar, kategori veya OCR icerigi ile hizlica arayip bulun." },
-  { icon: FileText, title: "Toplu Yukleme", description: "Birden fazla belgeyi ayni anda yukleyin, paralel olarak taratin." },
-  { icon: Download, title: "Disa Aktarma", description: "Belgelerinizi CSV veya Excel formatinda disa aktarin." },
+  {
+    number: "01",
+    icon: Scan,
+    title: "Akıllı Tarama",
+    headline: "Belgelerinizi saniyeler içinde dijitalleştirin.",
+    description:
+      "Gelişmiş OCR teknolojimiz makbuz, fiş ve faturalarınızı yükler yüklemez tarar. Firma adı, tarih, tutar ve KDV bilgileri otomatik olarak çıkarılır. Her alan için güvenilirlik skoru ile sonuçları kontrol edin.",
+    link: { label: "OCR hakkında daha fazla" },
+  },
+  {
+    number: "02",
+    icon: BarChart3,
+    title: "Gelir-Gider Takibi",
+    headline: "Finansal durumunuzu tek bakışta görün.",
+    description:
+      "Tüm gelen ve giden faturalarınızı tek panelden takip edin. Aylık trend grafikleri, kategori bazlı harcama dağılımı ve tedarikçi sıralamasıyla verilerinizi anlamlı hale getirin. Excel ve CSV dışa aktarım ile muhasebeciye hazır raporlar oluşturun.",
+    link: { label: "Raporları keşfedin" },
+  },
+  {
+    number: "03",
+    icon: Bell,
+    title: "Akıllı Hatırlatıcılar",
+    headline: "Hiçbir ödeme tarihini kaçırmayın.",
+    description:
+      "Tekrarlayan fatura kalıplarını otomatik algılayın ve ödeme hatırlatıcıları oluşturun. Yaklaşan ödemelerinizi takvim görünümünde takip edin. Gecikme riskini sıfıra indirin.",
+    link: { label: "Hatırlatıcıları keşfedin" },
+  },
+  {
+    number: "04",
+    icon: Users,
+    title: "Çoklu Kullanıcı",
+    headline: "Ekibinizle birlikte çalışın.",
+    description:
+      "Çalışma alanları oluşturun, ekip üyelerinize roller atayın. Yönetici, editör ve görüntüleyici yetkileriyle belgelerinize erişimi kontrol edin. Tüm değişiklikler denetim kaydıyla izlenir.",
+    link: { label: "Takım özellikleri" },
+  },
 ];
 
 export function Features() {
   return (
-    <section className="bg-white py-20">
-      <div className="max-w-5xl mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center text-slate-900 mb-4">Ozellikler</h2>
-        <p className="text-center text-slate-600 mb-12 max-w-xl mx-auto">Evrak isleme surecini bastan sona kolaylastiran araclar.</p>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+    <section className="py-24 sm:py-32 bg-paper">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        {/* Section header */}
+        <div className="mb-20">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink-faint font-medium mb-4">
+            Özellikler
+          </p>
+          <h2 className="text-3xl sm:text-[40px] font-bold text-ink tracking-tight leading-tight">
+            İhtiyacınız olan her şey,{" "}
+            <br className="hidden sm:block" />
+            tek panelde.
+          </h2>
+        </div>
+
+        {/* Feature rows */}
+        <div className="space-y-24">
           {features.map((feature) => (
-            <div key={feature.title} className="p-6 rounded-xl border hover:shadow-sm transition-shadow">
-              <div className="inline-flex items-center justify-center w-10 h-10 bg-blue-50 rounded-lg mb-4">
-                <feature.icon className="h-5 w-5 text-blue-600" />
+            <div
+              key={feature.number}
+              className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center"
+            >
+              {/* Text */}
+              <div>
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="text-sm font-mono text-ink-faint font-medium">
+                    [{feature.number}]
+                  </span>
+                  <span className="text-sm font-semibold text-ink uppercase tracking-wide">
+                    {feature.title}
+                  </span>
+                </div>
+                <h3 className="text-2xl sm:text-[32px] font-bold text-ink tracking-tight leading-[1.15] mb-5">
+                  {feature.headline}
+                </h3>
+                <p className="text-lg sm:text-xl text-ink-muted leading-relaxed mb-6">
+                  {feature.description}
+                </p>
+                <FeatureDialog featureNumber={feature.number}>
+                  {feature.link.label}
+                </FeatureDialog>
               </div>
-              <h3 className="font-semibold text-slate-900 mb-1">{feature.title}</h3>
-              <p className="text-sm text-slate-600 leading-relaxed">{feature.description}</p>
+
+              {/* Visual placeholder */}
+              <div className="relative">
+                <div className="aspect-[4/3] rounded-xl bg-surface border border-paper-lines flex items-center justify-center">
+                  <feature.icon className="h-16 w-16 text-ink-faint/30" strokeWidth={1} />
+                </div>
+              </div>
             </div>
           ))}
         </div>

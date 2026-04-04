@@ -1,27 +1,62 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, BarChart3 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { DashboardMockup } from "./dashboard-mockup";
+import { AnnouncementDialog } from "./announcement-dialog";
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden bg-white">
-      <div className="max-w-5xl mx-auto px-4 py-24 sm:py-32 text-center">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight text-slate-900 mb-6">
-          Makbuz ve faturalari yukleyin,{" "}
-          <span className="text-blue-600">gerisini Otomakbuz halletsin.</span>
-        </h1>
-        <p className="text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10">
-          Makbuz, fis ve faturalarinizi saniyeler icinde okuyup duzenlemenizi saglayan akilli evrak isleme platformu.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link href="/kayit"><Button size="lg" className="text-base px-8">Ucretsiz Dene</Button></Link>
-          <Link href="#nasil-calisir"><Button variant="outline" size="lg" className="text-base px-8">Nasil Calisir?</Button></Link>
+    <section className="relative overflow-hidden bg-paper">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-0">
+        <div className="text-center max-w-3xl mx-auto">
+          {/* Announcement pill */}
+          <div className="animate-fade-up">
+            <AnnouncementDialog>
+              <span className="text-xs font-medium">Yeni: Çoklu kullanıcı desteği ve gelişmiş raporlar</span>
+              <ArrowRight className="h-3 w-3" />
+            </AnnouncementDialog>
+          </div>
+
+          {/* Spacer */}
+          <div className="h-8" />
+
+          {/* H1 */}
+          <h1 className="animate-fade-up animate-fade-up-delay-1 text-[40px] sm:text-[52px] lg:text-[62px] font-bold tracking-tight text-ink leading-[1.05] mb-6">
+            Belge yönetiminde{" "}
+            <br className="hidden sm:block" />
+            yeni standart.
+          </h1>
+
+          {/* Subtitle */}
+          <p className="animate-fade-up animate-fade-up-delay-2 text-lg sm:text-xl text-ink-muted max-w-xl mx-auto mb-10 leading-relaxed">
+            Makbuz ve faturalarınızı yükleyin, OCR ile otomatik tarayalım, gelir-gider takibinizi kolaylaştıralım.
+          </p>
+
+          {/* CTAs */}
+          <div className="animate-fade-up animate-fade-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center mb-16">
+            <Link href="/kayit">
+              <Button
+                size="lg"
+                className="text-base px-8 h-13 bg-ink hover:bg-ink-light text-white rounded-full font-medium transition-all hover:-translate-y-0.5 shadow-lg shadow-ink/10"
+              >
+                Ücretsiz Başla
+                <ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </Link>
+            <Link href="#nasil-calisir">
+              <Button
+                variant="outline"
+                size="lg"
+                className="text-base px-8 h-13 rounded-full border-paper-lines hover:border-ink/20 hover:bg-surface transition-all font-medium"
+              >
+                Nasıl Çalışır?
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-center gap-8 mt-16 text-sm text-slate-500">
-          <div className="flex items-center gap-2"><Upload className="h-4 w-4" /><span>Hizli Yukleme</span></div>
-          <div className="flex items-center gap-2"><CheckCircle className="h-4 w-4" /><span>Otomatik Tanima</span></div>
-          <div className="flex items-center gap-2"><BarChart3 className="h-4 w-4" /><span>Detayli Raporlama</span></div>
-        </div>
+
+        {/* Dashboard Mockup */}
+        <DashboardMockup />
       </div>
     </section>
   );

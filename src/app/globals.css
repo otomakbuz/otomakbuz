@@ -46,75 +46,68 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Brand colors — receipt brown (warm espresso) */
+  --color-brand: #4A3728;
+  --color-brand-dark: #3B2C1F;
+  --color-brand-darker: #2C1810;
+  --color-brand-light: #6E5A3E;
+  --color-brand-50: #FAF6F0;
+  --color-brand-100: #F0E9DD;
+  --color-brand-200: #E0D5C5;
+  --color-brand-900: #2C1810;
+
+  /* Receipt sidebar — warm brown strip */
+  --color-receipt-gold: #A0845C;
+  --color-receipt-gold-dark: #8B7250;
+  --color-receipt-gold-darker: #6E5A3E;
+  --color-receipt-brown: #4A3728;
+  --color-receipt-brown-dark: #3B2C1F;
+
+  /* Paper & ink */
+  --color-ink: #2C1810;
+  --color-ink-light: #3D2B1F;
+  --color-ink-muted: #6B5B4D;
+  --color-ink-faint: #9C8E82;
+  --color-surface: #FAF6F0;
+  --color-surface-raised: #FFFDF8;
+  --color-paper: #FFFDF8;
+  --color-paper-lines: #E8DFD0;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-}
-
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #FAF6F0;
+  --foreground: #2C1810;
+  --card: #FFFDF8;
+  --card-foreground: #2C1810;
+  --popover: #FFFDF8;
+  --popover-foreground: #2C1810;
+  --primary: #4A3728;
+  --primary-foreground: #FFFDF8;
+  --secondary: #F0E9DD;
+  --secondary-foreground: #2C1810;
+  --muted: #F0E9DD;
+  --muted-foreground: #6B5B4D;
+  --accent: #F0E9DD;
+  --accent-foreground: #4A3728;
+  --destructive: #DC2626;
+  --border: #E0D5C5;
+  --input: #E0D5C5;
+  --ring: #4A3728;
+  --chart-1: #4A3728;
+  --chart-2: #C4A94D;
+  --chart-3: #6B5B3A;
+  --chart-4: #10B981;
+  --chart-5: #8B5CF6;
+  --radius: 0.25rem;
+  --sidebar: #4A3728;
+  --sidebar-foreground: #E8DFD0;
+  --sidebar-primary: #A0845C;
+  --sidebar-primary-foreground: #2C1810;
+  --sidebar-accent: #3B2C1F;
+  --sidebar-accent-foreground: #F0E9DD;
+  --sidebar-border: #3B2C1F;
+  --sidebar-ring: #A0845C;
 }
 
 @layer base {
@@ -122,9 +115,129 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
   html {
     @apply font-sans;
   }
 }
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar — warm tones */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #A0845C55;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #A0845C88;
+}
+
+/* ── Receipt Paper Texture ── */
+.paper-bg {
+  background-color: #FAF6F0;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 31px,
+      #E8DFD022 31px,
+      #E8DFD022 32px
+    );
+}
+
+/* Receipt card — subtle paper shadow */
+.receipt-card {
+  background: #FFFDF8;
+  border: 1px solid #E0D5C5;
+  box-shadow:
+    0 1px 3px rgba(107, 91, 58, 0.06),
+    0 4px 12px rgba(107, 91, 58, 0.04);
+}
+
+/* Receipt sidebar warm brown strip effect */
+.receipt-sidebar {
+  background: linear-gradient(180deg, #6E5A3E 0%, #5A4732 20%, #4A3728 60%, #3B2C1F 100%);
+}
+
+/* ── Page Fold Transition ── */
+@keyframes page-fold-in {
+  0% {
+    opacity: 0;
+    transform: perspective(1200px) rotateY(-12deg) scale(0.96);
+    transform-origin: left center;
+    filter: brightness(0.92);
+  }
+  50% {
+    opacity: 0.8;
+    transform: perspective(1200px) rotateY(-4deg) scale(0.99);
+    filter: brightness(0.97);
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1200px) rotateY(0deg) scale(1);
+    transform-origin: left center;
+    filter: brightness(1);
+  }
+}
+
+@keyframes page-unfold {
+  0% {
+    opacity: 0;
+    transform: perspective(1200px) rotateY(8deg) translateX(20px);
+    transform-origin: right center;
+  }
+  100% {
+    opacity: 1;
+    transform: perspective(1200px) rotateY(0deg) translateX(0);
+    transform-origin: right center;
+  }
+}
+
+.page-fold-enter {
+  animation: page-fold-in 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+
+/* Receipt edge — decorative perforation line on sidebar */
+.receipt-perforation {
+  position: relative;
+}
+.receipt-perforation::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 6px,
+    #A0845C44 6px,
+    #A0845C44 12px
+  );
+}
+
+/* Landing page animations */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.6s ease-out forwards;
+}
+
+.animate-fade-up-delay-1 { animation-delay: 0.1s; opacity: 0; }
+.animate-fade-up-delay-2 { animation-delay: 0.2s; opacity: 0; }
+.animate-fade-up-delay-3 { animation-delay: 0.3s; opacity: 0; }
+.animate-fade-up-delay-4 { animation-delay: 0.4s; opacity: 0; }

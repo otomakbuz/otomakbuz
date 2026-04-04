@@ -11,7 +11,7 @@ export function DocumentFilters({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  function updateFilter(key: string, value: string) {
+  function updateFilter(key: string, value: string | null) {
     const params = new URLSearchParams(searchParams.toString());
     if (value && value !== "all") params.set(key, value);
     else params.delete(key);
@@ -24,40 +24,51 @@ export function DocumentFilters({ categories }: { categories: Category[] }) {
   return (
     <div className="flex flex-wrap gap-3 items-center">
       <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-        <Input placeholder="Firma, belge no veya icerik ara..." defaultValue={searchParams.get("search") || ""}
-          onChange={(e) => updateFilter("search", e.target.value)} className="pl-9" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
+        <Input placeholder="Firma, belge no veya içerik ara..." defaultValue={searchParams.get("search") || ""}
+          onChange={(e) => updateFilter("search", e.target.value)} className="pl-9 h-10" />
       </div>
-      <Select defaultValue={searchParams.get("status") || "all"} onValueChange={(v) => updateFilter("status", v)}>
-        <SelectTrigger className="w-[160px]"><SelectValue placeholder="Durum" /></SelectTrigger>
+      <Select defaultValue={searchParams.get("status") ?? "all"} onValueChange={(v) => updateFilter("status", v)}>
+        <SelectTrigger className="w-[160px] h-10"><SelectValue placeholder="Durum" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Tum Durumlar</SelectItem>
-          <SelectItem value="needs_review">Inceleme Bekliyor</SelectItem>
-          <SelectItem value="verified">Dogrulandi</SelectItem>
-          <SelectItem value="archived">Arsivlendi</SelectItem>
-          <SelectItem value="failed">Basarisiz</SelectItem>
+          <SelectItem value="all">Tüm Durumlar</SelectItem>
+          <SelectItem value="needs_review">İnceleme Bekliyor</SelectItem>
+          <SelectItem value="verified">Doğrulandı</SelectItem>
+          <SelectItem value="archived">Arşivlendi</SelectItem>
+          <SelectItem value="failed">Başarısız</SelectItem>
         </SelectContent>
       </Select>
-      <Select defaultValue={searchParams.get("category_id") || "all"} onValueChange={(v) => updateFilter("category_id", v)}>
-        <SelectTrigger className="w-[160px]"><SelectValue placeholder="Kategori" /></SelectTrigger>
+      <Select defaultValue={searchParams.get("category_id") ?? "all"} onValueChange={(v) => updateFilter("category_id", v)}>
+        <SelectTrigger className="w-[160px] h-10"><SelectValue placeholder="Kategori" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Tum Kategoriler</SelectItem>
+          <SelectItem value="all">Tüm Kategoriler</SelectItem>
           {categories.map((cat) => (<SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>))}
         </SelectContent>
       </Select>
-      <Select defaultValue={searchParams.get("document_type") || "all"} onValueChange={(v) => updateFilter("document_type", v)}>
-        <SelectTrigger className="w-[140px]"><SelectValue placeholder="Belge Turu" /></SelectTrigger>
+      <Select defaultValue={searchParams.get("direction") ?? "all"} onValueChange={(v) => updateFilter("direction", v)}>
+        <SelectTrigger className="w-[130px] h-10"><SelectValue placeholder="Yön" /></SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">Tum Turler</SelectItem>
+          <SelectItem value="all">Tüm Yönler</SelectItem>
+          <SelectItem value="income">Gelir</SelectItem>
+          <SelectItem value="expense">Gider</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select defaultValue={searchParams.get("document_type") ?? "all"} onValueChange={(v) => updateFilter("document_type", v)}>
+        <SelectTrigger className="w-[180px] h-10"><SelectValue placeholder="Belge Türü" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tüm Türler</SelectItem>
           <SelectItem value="fatura">Fatura</SelectItem>
-          <SelectItem value="fis">Fis</SelectItem>
-          <SelectItem value="makbuz">Makbuz</SelectItem>
-          <SelectItem value="pos_slip">POS Slip</SelectItem>
-          <SelectItem value="gider_fisi">Gider Fisi</SelectItem>
+          <SelectItem value="perakende_fis">Perakende Fişi</SelectItem>
+          <SelectItem value="serbest_meslek_makbuzu">Serbest Meslek Makbuzu</SelectItem>
+          <SelectItem value="gider_pusulasi">Gider Pusulası</SelectItem>
+          <SelectItem value="mustahsil_makbuzu">Müstahsil Makbuzu</SelectItem>
+          <SelectItem value="irsaliye">Sevk İrsaliyesi</SelectItem>
         </SelectContent>
       </Select>
       {hasFilters && (
-        <Button variant="ghost" size="sm" onClick={clearFilters}><X className="h-4 w-4 mr-1" />Temizle</Button>
+        <Button variant="ghost" size="sm" onClick={clearFilters} className="text-ink-muted hover:text-ink">
+          <X className="h-4 w-4 mr-1" />Temizle
+        </Button>
       )}
     </div>
   );

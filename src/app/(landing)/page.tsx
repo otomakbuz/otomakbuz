@@ -2,36 +2,56 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { Hero } from "@/components/landing/hero";
-import { HowItWorks } from "@/components/landing/how-it-works";
+import { LogoStrip } from "@/components/landing/logo-strip";
 import { Features } from "@/components/landing/features";
+import { HowItWorks } from "@/components/landing/how-it-works";
+import { Testimonial } from "@/components/landing/testimonial";
+import { CtaSection } from "@/components/landing/cta-section";
+import { Footer } from "@/components/landing/footer";
+import { PricingDialog } from "@/components/landing/pricing-dialog";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen">
-      <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-sm border-b">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+    <div className="min-h-screen bg-paper">
+      {/* Sticky frosted glass navbar */}
+      <nav className="sticky top-0 z-50 bg-paper/80 backdrop-blur-xl border-b border-paper-lines/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <Logo />
-          <div className="flex items-center gap-3">
-            <Link href="/giris"><Button variant="ghost" size="sm">Giris Yap</Button></Link>
-            <Link href="/kayit"><Button size="sm">Ucretsiz Dene</Button></Link>
+          <div className="hidden md:flex items-center gap-8">
+            <Link href="#nasil-calisir" className="text-sm text-ink-muted hover:text-ink transition-colors font-medium">
+              Nasıl Çalışır
+            </Link>
+            <Link href="#ozellikler" className="text-sm text-ink-muted hover:text-ink transition-colors font-medium">
+              Özellikler
+            </Link>
+            <PricingDialog>
+              Fiyatlandırma
+            </PricingDialog>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/giris">
+              <Button variant="ghost" size="sm" className="text-ink-muted hover:text-ink font-medium text-sm">
+                Giriş Yap
+              </Button>
+            </Link>
+            <Link href="/kayit">
+              <Button size="sm" className="bg-ink hover:bg-ink-light text-white font-medium text-sm rounded-full px-5">
+                Ücretsiz Başla
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
+
       <Hero />
-      <HowItWorks />
-      <Features />
-      <section className="bg-slate-900 py-20">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">Evrak islemede yeni doneme gecin</h2>
-          <p className="text-slate-400 mb-8">Hemen kayit olun, belgelerinizi yuklemeye baslayin.</p>
-          <Link href="/kayit"><Button size="lg" className="text-base px-8">Ucretsiz Dene</Button></Link>
-        </div>
+      <LogoStrip />
+      <section id="ozellikler">
+        <Features />
       </section>
-      <footer className="bg-white border-t py-8">
-        <div className="max-w-5xl mx-auto px-4 text-center text-sm text-slate-500">
-          &copy; {new Date().getFullYear()} Otomakbuz. Tum haklari saklidir.
-        </div>
-      </footer>
+      <HowItWorks />
+      <Testimonial />
+      <CtaSection />
+      <Footer />
     </div>
   );
 }

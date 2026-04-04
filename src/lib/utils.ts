@@ -35,12 +35,12 @@ export function getConfidenceLabel(score: number): string {
 
 export function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
-    uploaded: "Yuklendi",
-    processing: "Isleniyor",
-    needs_review: "Inceleme Bekliyor",
-    verified: "Dogrulandi",
-    archived: "Arsivlendi",
-    failed: "Basarisiz",
+    uploaded: "Yüklendi",
+    processing: "İşleniyor",
+    needs_review: "İnceleme Bekliyor",
+    verified: "Doğrulandı",
+    archived: "Arşivlendi",
+    failed: "Başarısız",
   };
   return labels[status] || status;
 }
@@ -58,13 +58,20 @@ export function getStatusColor(status: string): string {
 }
 
 export function getDocumentTypeLabel(type: string | null): string {
-  if (!type) return "Bilinmiyor";
+  if (!type) return "Belirtilmemiş";
+  // Resmi Türk vergi belgesi taksonomisi (VUK 229-237)
   const labels: Record<string, string> = {
     fatura: "Fatura",
-    fis: "Fis",
-    makbuz: "Makbuz",
-    pos_slip: "POS Slip",
-    gider_fisi: "Gider Fisi",
+    perakende_fis: "Perakende Fişi",
+    serbest_meslek_makbuzu: "Serbest Meslek Makbuzu",
+    gider_pusulasi: "Gider Pusulası",
+    mustahsil_makbuzu: "Müstahsil Makbuzu",
+    irsaliye: "Sevk İrsaliyesi",
+    // Geriye dönük uyumluluk (eski değerler)
+    fis: "Perakende Fişi",
+    pos_slip: "Perakende Fişi",
+    gider_fisi: "Gider Pusulası",
+    makbuz: "Serbest Meslek Makbuzu",
   };
   return labels[type] || type;
 }

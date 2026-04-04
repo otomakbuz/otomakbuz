@@ -1,26 +1,60 @@
-import { Upload, Scan, FolderCheck } from "lucide-react";
+import { StepDialog } from "./step-dialog";
 
 const steps = [
-  { icon: Upload, title: "1. Yukleyin", description: "Makbuz, fis veya faturayi surukleyip birakin ya da dosya secin. Tekli veya toplu yukleme yapabilirsiniz." },
-  { icon: Scan, title: "2. Otomatik Taransin", description: "Sistem belgeyi aninda okur, firma adi, tarih, tutar, KDV gibi onemli alanlari otomatik cikarir." },
-  { icon: FolderCheck, title: "3. Yonetin", description: "Dogrulayin, kategorize edin, arsivleyin. Istediginiz zaman filtreleyin ve disa aktarin." },
+  {
+    number: "1",
+    title: "Yükleyin",
+    description: "Makbuz, fiş veya faturanızı sürükleyip bırakın. Çoklu yükleme desteklenir.",
+  },
+  {
+    number: "2",
+    title: "Taransın",
+    description: "OCR motoru belgenizi anında okur. Firma, tarih, tutar ve KDV otomatik çıkarılır.",
+  },
+  {
+    number: "3",
+    title: "Yönetin",
+    description: "Doğrulayın, kategorize edin, raporlayın. Muhasebeciye hazır dosyalar oluşturun.",
+  },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="nasil-calisir" className="bg-slate-50 py-20">
-      <div className="max-w-5xl mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center text-slate-900 mb-4">Nasil Calisir?</h2>
-        <p className="text-center text-slate-600 mb-12 max-w-xl mx-auto">Uc basit adimda belgelerinizi dijitallestirin ve duzenleyin.</p>
-        <div className="grid md:grid-cols-3 gap-8">
+    <section id="nasil-calisir" className="py-24 sm:py-32 bg-surface border-t border-paper-lines">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <p className="text-xs uppercase tracking-[0.2em] text-ink-faint font-medium mb-4">
+            Nasıl çalışır
+          </p>
+          <h2 className="text-3xl sm:text-[40px] font-bold text-ink tracking-tight">
+            Üç kolay adım.
+          </h2>
+        </div>
+
+        {/* Steps */}
+        <div className="relative grid md:grid-cols-3 gap-10 md:gap-6">
+          {/* Connecting line (desktop only) */}
+          <div className="hidden md:block absolute top-8 left-[calc(16.67%+24px)] right-[calc(16.67%+24px)] h-px bg-paper-lines" />
+
           {steps.map((step) => (
-            <div key={step.title} className="bg-white rounded-xl p-8 text-center shadow-sm border">
-              <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-100 rounded-xl mb-5">
-                <step.icon className="h-7 w-7 text-blue-600" />
+            <StepDialog key={step.number} stepNumber={step.number}>
+              <div className="text-center relative">
+                {/* Number circle */}
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full border-2 border-paper-lines bg-paper text-ink font-bold text-lg mb-6 relative z-10 group-hover:border-receipt-gold/50 transition-colors">
+                  {step.number}
+                </div>
+                <h3 className="text-xl font-bold text-ink mb-3 tracking-tight">
+                  {step.title}
+                </h3>
+                <p className="text-ink-muted leading-relaxed max-w-xs mx-auto">
+                  {step.description}
+                </p>
+                <span className="inline-block mt-4 text-xs font-medium text-ink-faint hover:text-brand transition-colors">
+                  Detayları gör →
+                </span>
               </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">{step.title}</h3>
-              <p className="text-slate-600 text-sm leading-relaxed">{step.description}</p>
-            </div>
+            </StepDialog>
           ))}
         </div>
       </div>

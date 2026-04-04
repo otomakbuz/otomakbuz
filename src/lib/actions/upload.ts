@@ -29,19 +29,41 @@ export async function uploadAndProcessDocument(formData: FormData) {
   if (insertError) throw new Error(insertError.message);
 
   try {
-    const ocr = getOcrAdapter();
+    const ocr = await getOcrAdapter(workspace.id);
     const result = await ocr.processDocument(publicUrl, fileExt);
 
     const { data: updatedDoc, error: updateError } = await supabase
       .from("documents")
       .update({
-        document_type: result.document_type, supplier_name: result.supplier_name,
-        supplier_tax_id: result.supplier_tax_id, document_number: result.document_number,
-        issue_date: result.issue_date, issue_time: result.issue_time,
-        subtotal_amount: result.subtotal_amount, vat_amount: result.vat_amount,
-        vat_rate: result.vat_rate, total_amount: result.total_amount,
-        currency: result.currency, payment_method: result.payment_method,
-        raw_ocr_text: result.raw_ocr_text, confidence_score: result.confidence_score,
+        document_type: result.document_type,
+        // Düzenleyen (satıcı)
+        supplier_name: result.supplier_name,
+        supplier_tax_id: result.supplier_tax_id,
+        supplier_tax_office: result.supplier_tax_office,
+        supplier_address: result.supplier_address,
+        // Alıcı
+        buyer_name: result.buyer_name,
+        buyer_tax_id: result.buyer_tax_id,
+        buyer_tax_office: result.buyer_tax_office,
+        buyer_address: result.buyer_address,
+        // Belge meta
+        document_number: result.document_number,
+        issue_date: result.issue_date,
+        issue_time: result.issue_time,
+        waybill_number: result.waybill_number,
+        // Tutarlar
+        subtotal_amount: result.subtotal_amount,
+        vat_amount: result.vat_amount,
+        vat_rate: result.vat_rate,
+        withholding_amount: result.withholding_amount,
+        total_amount: result.total_amount,
+        currency: result.currency,
+        payment_method: result.payment_method,
+        // Kalemler
+        line_items: result.line_items,
+        // Meta
+        raw_ocr_text: result.raw_ocr_text,
+        confidence_score: result.confidence_score,
         field_scores: result.field_scores,
         parsed_json: result as unknown as Record<string, unknown>,
         status: "needs_review",

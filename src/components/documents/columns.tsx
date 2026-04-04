@@ -5,7 +5,9 @@ import Link from "next/link";
 import type { Document } from "@/types";
 import { StatusBadge } from "./status-badge";
 import { ConfidenceBadge } from "./confidence-badge";
+import { DirectionBadge } from "./direction-badge";
 import { formatCurrency, formatDate, getDocumentTypeLabel } from "@/lib/utils";
+import type { DocumentDirection } from "@/types";
 
 export const columns: ColumnDef<Document>[] = [
   {
@@ -20,15 +22,23 @@ export const columns: ColumnDef<Document>[] = [
     accessorKey: "supplier_name",
     header: "Firma",
     cell: ({ row }) => (
-      <Link href={`/belge/${row.original.id}`} className="font-medium text-blue-600 hover:underline">
+      <Link href={`/belge/${row.original.id}`} className="font-medium text-brand hover:text-brand-dark hover:underline transition-colors">
         {row.getValue("supplier_name") || "Bilinmiyor"}
       </Link>
     ),
   },
   {
     accessorKey: "document_type",
-    header: "Belge Turu",
+    header: "Belge Türü",
     cell: ({ row }) => getDocumentTypeLabel(row.getValue("document_type")),
+  },
+  {
+    accessorKey: "direction",
+    header: "Yön",
+    cell: ({ row }) => {
+      const direction = row.getValue("direction") as DocumentDirection;
+      return <DirectionBadge direction={direction || "expense"} />;
+    },
   },
   {
     accessorKey: "category",
@@ -59,7 +69,7 @@ export const columns: ColumnDef<Document>[] = [
   },
   {
     accessorKey: "confidence_score",
-    header: "Guven",
+    header: "Güven",
     cell: ({ row }) => <ConfidenceBadge score={row.getValue("confidence_score") as number | null} />,
   },
 ];
