@@ -2,7 +2,7 @@
 
 import { Suspense, useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Float, Environment, RoundedBox, Text } from "@react-three/drei";
+import { Environment, Text } from "@react-three/drei";
 import * as THREE from "three";
 
 /**
@@ -11,176 +11,6 @@ import * as THREE from "three";
  * Arkada iPhone 17 Plus, önde süzülen kağıt dokulu fişler.
  * Brand renkleri: receipt-brown (#8B4513), receipt-gold (#D4A574), paper (#FAF8F3)
  */
-
-// ─────────────────────────────────────────────────────────────
-// Procedural kağıt dokusu — noise + lifler
-// ─────────────────────────────────────────────────────────────
-function usePaperTexture(tint = "#FAF8F3") {
-  return useMemo(() => {
-    if (typeof document === "undefined") return null;
-    const size = 512;
-    const canvas = document.createElement("canvas");
-    canvas.width = size;
-    canvas.height = size;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-
-    // Taban rengi
-    ctx.fillStyle = tint;
-    ctx.fillRect(0, 0, size, size);
-
-    // İnce gürültü (kağıt grenleri)
-    const imageData = ctx.getImageData(0, 0, size, size);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const n = (Math.random() - 0.5) * 22;
-      data[i] = Math.max(0, Math.min(255, data[i] + n));
-      data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + n));
-      data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + n));
-    }
-    ctx.putImageData(imageData, 0, 0);
-
-    // Kağıt lifleri
-    ctx.globalAlpha = 0.09;
-    for (let i = 0; i < 420; i++) {
-      ctx.strokeStyle = Math.random() > 0.5 ? "#8B7355" : "#D4A574";
-      ctx.lineWidth = 0.3 + Math.random() * 0.7;
-      const x = Math.random() * size;
-      const y = Math.random() * size;
-      const len = 10 + Math.random() * 35;
-      const angle = Math.random() * Math.PI * 2;
-      ctx.beginPath();
-      ctx.moveTo(x, y);
-      ctx.lineTo(x + Math.cos(angle) * len, y + Math.sin(angle) * len);
-      ctx.stroke();
-    }
-
-    // Hafif sararma lekeleri (vintage his)
-    ctx.globalAlpha = 0.05;
-    for (let i = 0; i < 8; i++) {
-      const cx = Math.random() * size;
-      const cy = Math.random() * size;
-      const r = 60 + Math.random() * 120;
-      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-      grad.addColorStop(0, "#c9a16a");
-      grad.addColorStop(1, "rgba(201,161,106,0)");
-      ctx.fillStyle = grad;
-      ctx.fillRect(cx - r, cy - r, r * 2, r * 2);
-    }
-    ctx.globalAlpha = 1;
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.needsUpdate = true;
-    return texture;
-  }, [tint]);
-}
-
-// ─────────────────────────────────────────────────────────────
-// Receipt / Fatura kartı — kağıt dokulu
-// ─────────────────────────────────────────────────────────────
-function ReceiptCard({
-  position,
-  rotation,
-  title,
-  amount,
-  lines,
-  color = "#FAF8F3",
-  scale = 1,
-}: {
-  position: [number, number, number];
-  rotation: [number, number, number];
-  title: string;
-  amount: string;
-  lines: string[];
-  color?: string;
-  scale?: number;
-}) {
-  const paperTexture = usePaperTexture(color);
-
-  return (
-    <Float
-      speed={1.4}
-      rotationIntensity={0.35}
-      floatIntensity={0.55}
-      floatingRange={[-0.1, 0.1]}
-    >
-      <group position={position} rotation={rotation} scale={scale}>
-        {/* Kağıt arka plan — procedural doku */}
-        <RoundedBox
-          args={[1.4, 2.0, 0.025]}
-          radius={0.04}
-          smoothness={4}
-          castShadow
-          receiveShadow
-        >
-          <meshStandardMaterial
-            map={paperTexture}
-            color={color}
-            roughness={0.92}
-            metalness={0.0}
-          />
-        </RoundedBox>
-
-        {/* Üst şerit (marka rengi) */}
-        <mesh position={[0, 0.85, 0.014]}>
-          <planeGeometry args={[1.3, 0.12]} />
-          <meshBasicMaterial color="#8B4513" />
-        </mesh>
-
-        {/* Başlık */}
-        <Text
-          position={[0, 0.6, 0.016]}
-          fontSize={0.12}
-          color="#2a1f17"
-          anchorX="center"
-          anchorY="middle"
-          maxWidth={1.2}
-        >
-          {title}
-        </Text>
-
-        {/* Tutar (büyük) */}
-        <Text
-          position={[0, 0.25, 0.016]}
-          fontSize={0.22}
-          color="#8B4513"
-          anchorX="center"
-          anchorY="middle"
-        >
-          {amount}
-        </Text>
-
-        {/* Satır detayları */}
-        {lines.map((line, i) => (
-          <Text
-            key={i}
-            position={[0, -0.1 - i * 0.18, 0.016]}
-            fontSize={0.09}
-            color="#5a4a3d"
-            anchorX="center"
-            anchorY="middle"
-            maxWidth={1.2}
-          >
-            {line}
-          </Text>
-        ))}
-
-        {/* Alt barkod benzeri çizgiler */}
-        <group position={[0, -0.8, 0.014]}>
-          {[...Array(14)].map((_, i) => (
-            <mesh key={i} position={[-0.45 + i * 0.07, 0, 0]}>
-              <planeGeometry
-                args={[0.008 + Math.random() * 0.02, 0.08]}
-              />
-              <meshBasicMaterial color="#2a1f17" opacity={0.7} transparent />
-            </mesh>
-          ))}
-        </group>
-      </group>
-    </Float>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Bulut Yükleme Sahnesi — fişler taranır, buluta yüklenir
@@ -577,59 +407,6 @@ function CloudUploadScene() {
 }
 
 // ─────────────────────────────────────────────────────────────
-// Yörünge halkası — telefon önünde, farklı derinliklerde
-// ─────────────────────────────────────────────────────────────
-function OrbitingReceipts() {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    // Çok yavaş sallanma, full rotation yerine ileri-geri
-    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.15;
-    groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.08;
-  });
-
-  // Fişler sol bölgeye kümelenmiş, arkada (z negatif) — telefonu asla kapatmazlar
-  const receipts = useMemo(
-    () => [
-      {
-        position: [-2.8, 1.4, -0.8] as [number, number, number],
-        rotation: [0.12, 0.32, -0.18] as [number, number, number],
-        title: "SHELL YAKIT",
-        amount: "₺420,50",
-        lines: ["12.03.2026", "Fatura", "VUK 229"],
-        scale: 0.85,
-      },
-      {
-        position: [-3.2, -1.3, -1.2] as [number, number, number],
-        rotation: [-0.12, 0.4, 0.2] as [number, number, number],
-        title: "ARAS KARGO",
-        amount: "₺85,00",
-        lines: ["08.03.2026", "İrsaliye", "KDV %20"],
-        scale: 0.8,
-      },
-      {
-        position: [-1.6, -0.2, -2.0] as [number, number, number],
-        rotation: [0.18, 0.22, -0.1] as [number, number, number],
-        title: "TURKCELL",
-        amount: "₺380,00",
-        lines: ["10.03.2026", "e-Fatura", "KDV %20"],
-        scale: 0.78,
-      },
-    ],
-    []
-  );
-
-  return (
-    <group ref={groupRef}>
-      {receipts.map((r, i) => (
-        <ReceiptCard key={i} {...r} />
-      ))}
-    </group>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
 // Ana sahne
 // ─────────────────────────────────────────────────────────────
 export default function Hero3DScene() {
@@ -673,7 +450,6 @@ export default function Hero3DScene() {
         {/* Objeler */}
         <Suspense fallback={null}>
           <CloudUploadScene />
-          <OrbitingReceipts />
         </Suspense>
 
         {/* Yumuşak zemin gölgesi */}
