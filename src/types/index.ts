@@ -192,6 +192,8 @@ export interface Document {
   field_scores: Record<string, number> | null;
   raw_ocr_text: string | null;
   parsed_json: Record<string, unknown> | null;
+  // Tekilleştirme — SHA-256 hex, workspace içinde unique
+  file_hash: string | null;
   created_at: string;
   updated_at: string;
   category?: Category | null;

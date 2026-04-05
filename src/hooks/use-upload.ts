@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { toast } from "sonner";
 import { uploadAndProcessDocument } from "@/lib/actions/upload";
 import type { Document } from "@/types";
 
@@ -33,9 +34,20 @@ export function useUpload() {
       setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "done", result } : i)));
       setActiveReviewId((current) => current ?? itemId);
     } catch (err) {
-      setItems((prev) => prev.map((i) =>
-        i.id === itemId ? { ...i, status: "error", error: err instanceof Error ? err.message : "Bilinmeyen hata" } : i
-      ));
+      const rawMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
+      // DUPLICATE: prefix'i upload.ts'den gelir; kullanıcı dostu toast göster
+      if (rawMsg.startsWith("DUPLICATE:")) {
+        const friendly = rawMsg.replace(/^DUPLICATE:\s*/, "");
+        toast.error(friendly);
+        setItems((prev) => prev.map((i) =>
+          i.id === itemId ? { ...i, status: "error", error: friendly } : i
+        ));
+      } else {
+        toast.error(rawMsg);
+        setItems((prev) => prev.map((i) =>
+          i.id === itemId ? { ...i, status: "error", error: rawMsg } : i
+        ));
+      }
     }
   }
 
