@@ -6,8 +6,23 @@ import { FileText, Loader2, Upload, FileUp, Eye, AlertCircle } from "lucide-reac
 import { cn } from "@/lib/utils";
 import type { UploadItem } from "@/hooks/use-upload";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "application/pdf",
+];
+const ACCEPTED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf"];
 const MAX_SIZE = 10 * 1024 * 1024;
+
+function isAcceptedFile(file: File): boolean {
+  if (file.size > MAX_SIZE) return false;
+  if (file.type && ACCEPTED_TYPES.includes(file.type)) return true;
+  const name = file.name.toLowerCase();
+  return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
 
 interface DocumentPreviewProps {
   item: UploadItem | null;
@@ -19,13 +34,14 @@ export function DocumentPreview({ item, previewUrl, onFiles }: DocumentPreviewPr
   const [dragActive, setDragActive] = useState(false);
 
   const handleFiles = useCallback((fileList: FileList) => {
-    const valid = Array.from(fileList).filter((f) => ACCEPTED_TYPES.includes(f.type) && f.size <= MAX_SIZE);
+    const valid = Array.from(fileList).filter(isAcceptedFile);
     if (valid.length > 0) onFiles(valid);
   }, [onFiles]);
 
   const openFilePicker = useCallback(() => {
     const input = document.createElement("input");
-    input.type = "file"; input.multiple = true; input.accept = ACCEPTED_TYPES.join(",");
+    input.type = "file"; input.multiple = true;
+    input.accept = [...ACCEPTED_TYPES, ...ACCEPTED_EXTENSIONS].join(",");
     input.onchange = () => { if (input.files) handleFiles(input.files); };
     input.click();
   }, [handleFiles]);
@@ -33,7 +49,14 @@ export function DocumentPreview({ item, previewUrl, onFiles }: DocumentPreviewPr
   // Belge var ve tamamlandı — önizleme göster
   if (item && (item.status === "done" || item.status === "uploading")) {
     const doc = item.result;
-    const isImage = item.file.type.startsWith("image/");
+    const lowerName = item.file.name.toLowerCase();
+    const isHeic =
+      item.file.type === "image/heic" ||
+      item.file.type === "image/heif" ||
+      lowerName.endsWith(".heic") ||
+      lowerName.endsWith(".heif");
+    // HEIC tarayıcıda render edilemez → image olarak davranma, özel placeholder göster
+    const isImage = item.file.type.startsWith("image/") && !isHeic;
     const fileUrl = doc?.original_file_url || previewUrl;
     const isProcessing = item.status === "uploading";
 
@@ -105,6 +128,16 @@ export function DocumentPreview({ item, previewUrl, onFiles }: DocumentPreviewPr
               sizes="50vw"
               unoptimized
             />
+          ) : isHeic ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-6">
+              <div className="w-16 h-16 rounded-full bg-receipt-gold/15 flex items-center justify-center mb-3">
+                <FileText className="h-8 w-8 text-receipt-brown" />
+              </div>
+              <p className="text-sm font-semibold text-ink">HEIC Fotoğraf</p>
+              <p className="text-xs text-ink-muted mt-1 max-w-[240px]">
+                Tarayıcı HEIC önizlemesini desteklemiyor — dosya yine de yüklendi ve OCR ile işlenecek.
+              </p>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center p-6">
               <FileText className="h-12 w-12 text-ink-faint mb-3" />
@@ -178,7 +211,7 @@ export function DocumentPreview({ item, previewUrl, onFiles }: DocumentPreviewPr
           {dragActive ? "Bırakın, yükleniyor..." : "Belge sürükleyin veya tıklayın"}
         </p>
         <p className="text-sm text-ink-muted text-center">
-          JPG, PNG, PDF, WEBP &bull; Maks 10MB
+          JPG, PNG, HEIC, WEBP, PDF &bull; Maks 10MB
         </p>
         <p className="text-xs text-ink-faint mt-3 text-center">
           Belge yüklendikten sonra burada önizlenecek

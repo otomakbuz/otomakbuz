@@ -183,242 +183,395 @@ function ReceiptCard({
 }
 
 // ─────────────────────────────────────────────────────────────
-// iPhone 17 Plus — düz titanyum kenar, yuvarlak köşeler, Dynamic Island
+// Bulut Yükleme Sahnesi — fişler taranır, buluta yüklenir
 // ─────────────────────────────────────────────────────────────
-function roundedRectShape(w: number, h: number, r: number) {
-  const shape = new THREE.Shape();
-  const x = -w / 2;
-  const y = -h / 2;
-  shape.moveTo(x + r, y);
-  shape.lineTo(x + w - r, y);
-  shape.quadraticCurveTo(x + w, y, x + w, y + r);
-  shape.lineTo(x + w, y + h - r);
-  shape.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  shape.lineTo(x + r, y + h);
-  shape.quadraticCurveTo(x, y + h, x, y + h - r);
-  shape.lineTo(x, y + r);
-  shape.quadraticCurveTo(x, y, x + r, y);
-  return shape;
+function Cloud() {
+  const ref = useRef<THREE.Group>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const ringRef = useRef<THREE.Mesh>(null);
+  const textRef = useRef<THREE.Group>(null);
+  const puffsRef = useRef<THREE.Group>(null);
+
+  useFrame((state) => {
+    const t = state.clock.elapsedTime;
+    if (ref.current) {
+      ref.current.position.y = 1.9 + Math.sin(t * 0.6) * 0.08;
+      ref.current.rotation.z = Math.sin(t * 0.3) * 0.02;
+    }
+    // Glow pulse — bulut canlı nefes alıyor
+    if (glowRef.current) {
+      const pulse = 1 + Math.sin(t * 1.2) * 0.08;
+      glowRef.current.scale.set(pulse, pulse, pulse);
+      const mat = glowRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = 0.25 + Math.sin(t * 1.2) * 0.08;
+    }
+    // Alttaki halka — buluta veri çekiyormuş gibi dönsün
+    if (ringRef.current) {
+      ringRef.current.rotation.z = t * 0.8;
+      const rpulse = 1 + Math.sin(t * 2) * 0.15;
+      ringRef.current.scale.set(rpulse, rpulse, 1);
+    }
+    // Yazı hafifçe yüzsün
+    if (textRef.current) {
+      textRef.current.position.y = 0.9 + Math.sin(t * 0.9) * 0.025;
+    }
+    // Bulut puff'ları hafif nefes alsın
+    if (puffsRef.current) {
+      const breathe = 1 + Math.sin(t * 0.9) * 0.015;
+      puffsRef.current.scale.set(breathe, breathe, breathe);
+    }
+  });
+
+  // Puff pozisyonları: [x, y, z, r]
+  const puffs: Array<[number, number, number, number]> = [
+    [0, 0, 0, 0.62],
+    [-0.55, -0.08, 0, 0.46],
+    [0.58, -0.1, 0, 0.50],
+    [-0.22, 0.28, 0.05, 0.44],
+    [0.32, 0.25, 0.05, 0.46],
+    [-0.88, 0.08, -0.05, 0.34],
+    [0.9, 0.05, -0.05, 0.36],
+    [0, 0.35, -0.1, 0.38],
+  ];
+
+  return (
+    <group ref={ref} position={[0, 1.9, 0]}>
+      {/* Arka plan glow — sıcak altın halo */}
+      <mesh ref={glowRef} position={[0, 0, -0.5]}>
+        <circleGeometry args={[1.9, 48]} />
+        <meshBasicMaterial color="#D4A574" transparent opacity={0.28} />
+      </mesh>
+
+      {/* "Otomakbuz" yazısı — bulutun üstünde sade */}
+      <group ref={textRef} position={[0, 0.78, 0.3]}>
+        <Text
+          fontSize={0.24}
+          color="#3B2C1F"
+          anchorX="center"
+          anchorY="middle"
+          fontWeight="bold"
+          outlineWidth={0.015}
+          outlineColor="#FFFDF8"
+        >
+          Otomakbuz
+        </Text>
+      </group>
+
+      {/* Bulut puff'ları — altın tonlu emissive */}
+      <group ref={puffsRef}>
+        {puffs.map(([x, y, z, r], i) => (
+          <mesh key={i} position={[x, y, z]} castShadow>
+            <sphereGeometry args={[r, 32, 32]} />
+            <meshStandardMaterial
+              color="#fefaf1"
+              roughness={0.82}
+              metalness={0.05}
+              emissive="#D4A574"
+              emissiveIntensity={0.25}
+            />
+          </mesh>
+        ))}
+      </group>
+
+      {/* Alt halka — dönen upload göstergesi */}
+      <mesh ref={ringRef} position={[0, -0.5, 0.18]} rotation={[-Math.PI / 2, 0, 0]}>
+        <ringGeometry args={[0.14, 0.22, 32, 1, 0, Math.PI * 1.5]} />
+        <meshBasicMaterial color="#D4A574" side={THREE.DoubleSide} transparent opacity={0.9} />
+      </mesh>
+
+      {/* Alt ok — upload */}
+      <Text
+        position={[0, -0.52, 0.28]}
+        fontSize={0.22}
+        color="#8B4513"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        ↑
+      </Text>
+    </group>
+  );
 }
 
-function Phone() {
+type ReceiptContent = {
+  title: string;
+  subtitle: string;
+  date: string;
+  items: Array<[string, string]>;
+  total: string;
+  totalLabel: string;
+};
+
+function UploadingReceipt({
+  phase,
+  xOffset,
+  cycle = 5.5,
+  content,
+}: {
+  phase: number;
+  xOffset: number;
+  cycle?: number;
+  content: ReceiptContent;
+}) {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame((state) => {
     if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-    groupRef.current.rotation.y = Math.sin(t * 0.3) * 0.1 - 0.12;
-    groupRef.current.rotation.x = Math.cos(t * 0.25) * 0.04;
-    groupRef.current.position.y = Math.sin(t * 0.5) * 0.08;
+    const t = ((state.clock.elapsedTime + phase) % cycle) / cycle; // 0..1
+
+    let y: number, scale: number, rotZ: number;
+
+    // Faz eşikleri — cycle 5.5s. Sıra: belir → 1s bekle → tara → buluta fırla → kaybol
+    // 1s idle = 1/5.5 ≈ 0.182 cycle
+    const P1_END = 0.12;     // belir
+    const IDLE_END = 0.30;   // +1s bekleme (tarama öncesi)
+    const SCAN_END = 0.72;   // tarama bitişi
+    const LAUNCH_END = 0.94; // buluta fırla bitişi
+
+    if (t < P1_END) {
+      // 1) Alt'tan belir
+      const p = t / P1_END;
+      y = -2.2 + p * 0.4;
+      scale = p;
+      rotZ = 0;
+    } else if (t < IDLE_END) {
+      // 1.5) 1 saniye bekle — hafif yüzer, henüz taranmıyor
+      const p = (t - P1_END) / (IDLE_END - P1_END);
+      y = -1.8 + Math.sin(p * Math.PI) * 0.03;
+      scale = 1;
+      rotZ = Math.sin(p * Math.PI * 0.8) * 0.02;
+    } else if (t < SCAN_END) {
+      // 2) Tarama + yükselme — scan line üstten aşağı süpürüyor
+      const p = (t - IDLE_END) / (SCAN_END - IDLE_END);
+      y = -1.8 + p * 1.4;
+      scale = 1;
+      rotZ = Math.sin(p * Math.PI * 2) * 0.04;
+    } else if (t < LAUNCH_END) {
+      // 3) Buluta doğru hızlanarak fırla, küçül
+      const p = (t - SCAN_END) / (LAUNCH_END - SCAN_END);
+      const eased = p * p;
+      y = -0.4 + eased * 2.05;
+      scale = 1 - eased * 0.9;
+      rotZ = eased * 0.35;
+    } else {
+      // 4) Görünmez
+      y = 1.65;
+      scale = 0.001;
+      rotZ = 0;
+    }
+
+    groupRef.current.position.set(xOffset, y, 0);
+    groupRef.current.scale.setScalar(Math.max(scale, 0.001) * 0.8);
+    groupRef.current.rotation.z = rotZ;
   });
 
-  // iPhone 17 Plus gerçek oranları
-  const W = 1.75;
-  const H = 3.6;
-  const D = 0.1; // çok ince profil
-  const R = 0.32; // corner radius (iPhone'un belirgin yuvarlak köşesi)
-
-  // Ana gövde: düz kenarlı, yalnızca köşeleri yuvarlak extruded geometri
-  const bodyGeometry = useMemo(() => {
-    const shape = roundedRectShape(W, H, R);
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: D,
-      bevelEnabled: true,
-      bevelSize: 0.012,
-      bevelThickness: 0.012,
-      bevelSegments: 6,
-      curveSegments: 32,
-    });
-    geo.center();
-    return geo;
-  }, []);
-
-  // Ekran camı (siyah OLED substrate) — gövdeden 0.01 küçük, keskin yuvarlak
-  const glassGeometry = useMemo(() => {
-    const shape = roundedRectShape(W - 0.07, H - 0.07, R - 0.03);
-    const geo = new THREE.ExtrudeGeometry(shape, {
-      depth: 0.004,
-      bevelEnabled: false,
-      curveSegments: 32,
-    });
-    geo.center();
-    return geo;
-  }, []);
+  const W = 0.95;
+  const H = 1.38;
 
   return (
-    <group ref={groupRef} position={[0, 0, -0.8]} scale={0.98}>
-      {/* Titanyum gövde — düz kenarlı, Rose Titanium */}
-      <mesh geometry={bodyGeometry} castShadow receiveShadow>
+    <group ref={groupRef}>
+      {/* Fiş gövdesi */}
+      <mesh castShadow>
+        <planeGeometry args={[W, H]} />
         <meshStandardMaterial
-          color="#e8a894"
-          roughness={0.35}
-          metalness={0.75}
+          color="#fdfaf2"
+          roughness={0.95}
+          side={THREE.DoubleSide}
         />
       </mesh>
 
-      {/* Siyah ekran camı (bezel) */}
-      <mesh geometry={glassGeometry} position={[0, 0, D / 2 + 0.003]}>
-        <meshStandardMaterial
-          color="#080808"
-          roughness={0.15}
-          metalness={0.3}
-        />
-      </mesh>
-
-      {/* Ekran UI background — kağıt beyazı */}
-      <mesh position={[0, 0, D / 2 + 0.008]}>
-        <planeGeometry args={[W - 0.1, H - 0.1]} />
-        <meshBasicMaterial color="#FAF8F3" />
-      </mesh>
-
-      {/* Dynamic Island */}
-      <mesh position={[0, H / 2 - 0.26, D / 2 + 0.014]}>
-        <RoundedBox args={[0.48, 0.14, 0.005]} radius={0.07} smoothness={6}>
-          <meshStandardMaterial color="#050505" roughness={0.3} metalness={0.2} />
-        </RoundedBox>
-      </mesh>
-
-      {/* Ekran içi: status bar saat (sol) */}
+      {/* Başlık */}
       <Text
-        position={[-0.62, H / 2 - 0.27, D / 2 + 0.012]}
-        fontSize={0.08}
+        position={[0, 0.55, 0.006]}
+        fontSize={0.075}
         color="#2a1f17"
         anchorX="center"
         anchorY="middle"
+        fontWeight="bold"
+        maxWidth={W - 0.1}
       >
-        9:41
+        {content.title}
+      </Text>
+      <Text
+        position={[0, 0.47, 0.006]}
+        fontSize={0.04}
+        color="#8a7565"
+        anchorX="center"
+        anchorY="middle"
+        maxWidth={W - 0.1}
+      >
+        {content.subtitle}
+      </Text>
+      <Text
+        position={[0, 0.41, 0.006]}
+        fontSize={0.038}
+        color="#8a7565"
+        anchorX="center"
+        anchorY="middle"
+      >
+        {content.date}
       </Text>
 
-      {/* Status bar sağ: sinyal çubukları */}
-      <group position={[0.48, H / 2 - 0.27, D / 2 + 0.012]}>
-        {[0, 1, 2, 3].map((i) => (
-          <mesh key={i} position={[i * 0.025, -0.015 + i * 0.008, 0]}>
-            <planeGeometry args={[0.018, 0.02 + i * 0.015]} />
+      {/* Üst kesik çizgi */}
+      <mesh position={[0, 0.36, 0.006]}>
+        <planeGeometry args={[W - 0.1, 0.004]} />
+        <meshBasicMaterial color="#c8b89a" />
+      </mesh>
+
+      {/* Ürün satırları */}
+      {content.items.map(([name, price], i) => (
+        <group key={i} position={[0, 0.28 - i * 0.085, 0.006]}>
+          <Text
+            position={[-W / 2 + 0.08, 0, 0]}
+            fontSize={0.058}
+            color="#2a1f17"
+            anchorX="left"
+            anchorY="middle"
+          >
+            {name}
+          </Text>
+          <Text
+            position={[W / 2 - 0.08, 0, 0]}
+            fontSize={0.058}
+            color="#2a1f17"
+            anchorX="right"
+            anchorY="middle"
+          >
+            {price}
+          </Text>
+        </group>
+      ))}
+
+      {/* Alt kesik çizgi */}
+      <mesh position={[0, -0.25, 0.006]}>
+        <planeGeometry args={[W - 0.1, 0.004]} />
+        <meshBasicMaterial color="#c8b89a" />
+      </mesh>
+
+      {/* Toplam etiketi + tutar */}
+      <Text
+        position={[-W / 2 + 0.08, -0.33, 0.006]}
+        fontSize={0.065}
+        color="#2a1f17"
+        anchorX="left"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        {content.totalLabel}
+      </Text>
+      <Text
+        position={[W / 2 - 0.08, -0.33, 0.006]}
+        fontSize={0.075}
+        color="#8B4513"
+        anchorX="right"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        {content.total}
+      </Text>
+
+      {/* Barkod — ince çubuklar */}
+      <group position={[0, -0.52, 0.006]}>
+        {Array.from({ length: 24 }).map((_, i) => (
+          <mesh key={i} position={[-0.3 + i * 0.026, 0, 0]}>
+            <planeGeometry args={[i % 3 === 0 ? 0.006 : 0.003, 0.07]} />
             <meshBasicMaterial color="#2a1f17" />
           </mesh>
         ))}
       </group>
 
-      {/* Status bar sağ: pil */}
-      <group position={[0.68, H / 2 - 0.27, D / 2 + 0.012]}>
-        <mesh>
-          <planeGeometry args={[0.09, 0.045]} />
-          <meshBasicMaterial color="#2a1f17" transparent opacity={0.2} />
-        </mesh>
-        <mesh position={[0, 0, 0.001]}>
-          <planeGeometry args={[0.08, 0.035]} />
-          <meshBasicMaterial color="#FAF8F3" />
-        </mesh>
-        <mesh position={[-0.015, 0, 0.002]}>
-          <planeGeometry args={[0.05, 0.028]} />
-          <meshBasicMaterial color="#2a1f17" />
-        </mesh>
-      </group>
+    </group>
+  );
+}
 
-      {/* Ekran içi: başlık */}
-      <Text
-        position={[0, 1.15, D / 2 + 0.012]}
-        fontSize={0.11}
-        color="#8B4513"
-        anchorX="center"
-        anchorY="middle"
-      >
-        OTOMAKBUZ
-      </Text>
+function UploadParticles() {
+  const groupRef = useRef<THREE.Group>(null);
+  const count = 10;
+  const particles = useMemo(
+    () =>
+      Array.from({ length: count }).map((_, i) => ({
+        phase: (i / count) * 3.2,
+        x: (i % 2 === 0 ? -1 : 1) * (0.15 + Math.random() * 0.6),
+      })),
+    []
+  );
 
-      {/* Ekran içi: üst çizgi */}
-      <mesh position={[0, 1.02, D / 2 + 0.012]}>
-        <planeGeometry args={[1.35, 0.008]} />
-        <meshBasicMaterial color="#8B4513" opacity={0.3} transparent />
-      </mesh>
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    groupRef.current.children.forEach((child, i) => {
+      const p = particles[i];
+      if (!p) return;
+      const cycle = 3.2;
+      const t = ((state.clock.elapsedTime + p.phase) % cycle) / cycle;
+      child.position.y = -0.2 + t * 2.1;
+      child.position.x = p.x * (1 - t * 0.85);
+      const mesh = child as THREE.Mesh;
+      const mat = mesh.material as THREE.MeshBasicMaterial;
+      mat.opacity = t < 0.15 ? t / 0.15 : t > 0.85 ? (1 - t) / 0.15 : 1;
+    });
+  });
 
-      {/* Ekran içi: stat kartı */}
-      <group position={[0, 0.65, D / 2 + 0.012]}>
-        <mesh>
-          <planeGeometry args={[1.35, 0.44]} />
-          <meshBasicMaterial color="#F5EFE4" />
+  return (
+    <group ref={groupRef}>
+      {particles.map((p, i) => (
+        <mesh key={i} position={[p.x, -0.2, 0.1]}>
+          <sphereGeometry args={[0.035, 12, 12]} />
+          <meshBasicMaterial color="#D4A574" transparent opacity={0.9} />
         </mesh>
-        <Text
-          position={[0, 0.09, 0.001]}
-          fontSize={0.08}
-          color="#5a4a3d"
-          anchorX="center"
-        >
-          BU AY TOPLAM
-        </Text>
-        <Text
-          position={[0, -0.08, 0.001]}
-          fontSize={0.17}
-          color="#8B4513"
-          anchorX="center"
-        >
-          ₺12.450
-        </Text>
-      </group>
-
-      {/* Ekran içi: mini satırlar */}
-      {[0, 1, 2, 3].map((i) => (
-        <group key={i} position={[0, 0.1 - i * 0.28, D / 2 + 0.012]}>
-          <mesh>
-            <planeGeometry args={[1.35, 0.24]} />
-            <meshBasicMaterial color="#FAF8F3" />
-          </mesh>
-          <mesh position={[-0.5, 0, 0.001]}>
-            <circleGeometry args={[0.06, 20]} />
-            <meshBasicMaterial color="#D4A574" />
-          </mesh>
-          <Text
-            position={[-0.33, 0.03, 0.002]}
-            fontSize={0.065}
-            color="#2a1f17"
-            anchorX="left"
-          >
-            {["Shell Yakıt", "Migros A.Ş.", "Turkcell", "Aras Kargo"][i]}
-          </Text>
-          <Text
-            position={[-0.33, -0.05, 0.002]}
-            fontSize={0.05}
-            color="#8a7565"
-            anchorX="left"
-          >
-            {["Fatura", "Perakende fiş", "Fatura", "İrsaliye"][i]}
-          </Text>
-          <Text
-            position={[0.6, 0, 0.002]}
-            fontSize={0.07}
-            color="#8B4513"
-            anchorX="right"
-          >
-            {["₺420", "₺1.250", "₺380", "₺85"][i]}
-          </Text>
-        </group>
       ))}
+    </group>
+  );
+}
 
-      {/* Home indicator */}
-      <mesh position={[0, -H / 2 + 0.12, D / 2 + 0.012]}>
-        <planeGeometry args={[0.35, 0.015]} />
-        <meshBasicMaterial color="#2a1f17" opacity={0.4} transparent />
-      </mesh>
+const RECEIPT_CONTENTS: ReceiptContent[] = [
+  {
+    title: "MİGROS A.Ş.",
+    subtitle: "Kadıköy Şb.",
+    date: "03.04.2026",
+    items: [
+      ["Süt 1L", "₺32,50"],
+      ["Ekmek", "₺15,00"],
+      ["Yumurta", "₺85,00"],
+      ["Peynir", "₺132,50"],
+    ],
+    totalLabel: "TOPLAM",
+    total: "₺265,00",
+  },
+  {
+    title: "SHELL YAKIT",
+    subtitle: "Bağdat Cd.",
+    date: "02.04.2026",
+    items: [
+      ["V-Power 95", "₺1.240"],
+      ["Yağ Kontrol", "₺0,00"],
+      ["KDV %20", "₺248,00"],
+    ],
+    totalLabel: "TOPLAM",
+    total: "₺1.488",
+  },
+  {
+    title: "TURKCELL",
+    subtitle: "e-Fatura",
+    date: "01.04.2026",
+    items: [
+      ["Hat Ücreti", "₺320,00"],
+      ["İnternet", "₺180,00"],
+      ["KDV %20", "₺100,00"],
+    ],
+    totalLabel: "TOPLAM",
+    total: "₺600,00",
+  },
+];
 
-      {/* Sol yan: ses açma tuşları */}
-      <mesh position={[-W / 2 - 0.002, 0.55, 0]}>
-        <boxGeometry args={[0.015, 0.22, 0.08]} />
-        <meshStandardMaterial color="#4a4a4d" roughness={0.3} metalness={0.9} />
-      </mesh>
-      <mesh position={[-W / 2 - 0.002, 0.25, 0]}>
-        <boxGeometry args={[0.015, 0.22, 0.08]} />
-        <meshStandardMaterial color="#4a4a4d" roughness={0.3} metalness={0.9} />
-      </mesh>
-      {/* Sol yan: action button */}
-      <mesh position={[-W / 2 - 0.002, 0.85, 0]}>
-        <boxGeometry args={[0.015, 0.1, 0.08]} />
-        <meshStandardMaterial color="#4a4a4d" roughness={0.3} metalness={0.9} />
-      </mesh>
-      {/* Sağ yan: power button */}
-      <mesh position={[W / 2 + 0.002, 0.55, 0]}>
-        <boxGeometry args={[0.015, 0.32, 0.08]} />
-        <meshStandardMaterial color="#4a4a4d" roughness={0.3} metalness={0.9} />
-      </mesh>
+function CloudUploadScene() {
+  return (
+    <group position={[2.6, 0, -0.1]}>
+      <Cloud />
+      <UploadingReceipt phase={0} xOffset={-0.55} content={RECEIPT_CONTENTS[0]} />
+      <UploadingReceipt phase={1.9} xOffset={0.55} content={RECEIPT_CONTENTS[1]} />
+      <UploadingReceipt phase={3.7} xOffset={0} content={RECEIPT_CONTENTS[2]} />
+      <UploadParticles />
     </group>
   );
 }
@@ -431,43 +584,37 @@ function OrbitingReceipts() {
 
   useFrame((state) => {
     if (!groupRef.current) return;
-    groupRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+    // Çok yavaş sallanma, full rotation yerine ileri-geri
+    groupRef.current.rotation.y = Math.sin(state.clock.elapsedTime * 0.15) * 0.15;
+    groupRef.current.position.y = Math.sin(state.clock.elapsedTime * 0.4) * 0.08;
   });
 
-  // Fişler pozitif z'de (kameraya yakın) → telefonun önünde görünür
+  // Fişler sol bölgeye kümelenmiş, arkada (z negatif) — telefonu asla kapatmazlar
   const receipts = useMemo(
     () => [
       {
-        position: [2.6, 0.9, 1.2] as [number, number, number],
-        rotation: [0.12, -0.35, 0.18] as [number, number, number],
-        title: "MIGROS A.Ş.",
-        amount: "₺1.250,00",
-        lines: ["15.03.2026", "KDV %20", "Perakende fiş"],
-        scale: 1.05,
-      },
-      {
-        position: [-2.5, 1.3, 1.6] as [number, number, number],
-        rotation: [-0.08, 0.42, -0.14] as [number, number, number],
+        position: [-2.8, 1.4, -0.8] as [number, number, number],
+        rotation: [0.12, 0.32, -0.18] as [number, number, number],
         title: "SHELL YAKIT",
         amount: "₺420,50",
         lines: ["12.03.2026", "Fatura", "VUK 229"],
-        scale: 1,
+        scale: 0.85,
       },
       {
-        position: [2.3, -1.1, 2.0] as [number, number, number],
-        rotation: [0.18, -0.28, -0.1] as [number, number, number],
-        title: "TURKCELL",
-        amount: "₺380,00",
-        lines: ["10.03.2026", "e-Fatura", "KDV %20"],
-        scale: 0.92,
-      },
-      {
-        position: [-2.8, -0.8, 0.9] as [number, number, number],
-        rotation: [-0.12, 0.38, 0.12] as [number, number, number],
+        position: [-3.2, -1.3, -1.2] as [number, number, number],
+        rotation: [-0.12, 0.4, 0.2] as [number, number, number],
         title: "ARAS KARGO",
         amount: "₺85,00",
         lines: ["08.03.2026", "İrsaliye", "KDV %20"],
-        scale: 0.9,
+        scale: 0.8,
+      },
+      {
+        position: [-1.6, -0.2, -2.0] as [number, number, number],
+        rotation: [0.18, 0.22, -0.1] as [number, number, number],
+        title: "TURKCELL",
+        amount: "₺380,00",
+        lines: ["10.03.2026", "e-Fatura", "KDV %20"],
+        scale: 0.78,
       },
     ],
     []
@@ -525,7 +672,7 @@ export default function Hero3DScene() {
 
         {/* Objeler */}
         <Suspense fallback={null}>
-          <Phone />
+          <CloudUploadScene />
           <OrbitingReceipts />
         </Suspense>
 

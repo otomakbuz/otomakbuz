@@ -4,8 +4,24 @@ import { useCallback, useState } from "react";
 import { Upload, FileUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const ACCEPTED_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "application/pdf",
+];
+// Bazı tarayıcılar HEIC/HEIF için MIME döndürmez → uzantı ile de kabul et
+const ACCEPTED_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".pdf"];
 const MAX_SIZE = 10 * 1024 * 1024;
+
+function isAcceptedFile(file: File): boolean {
+  if (file.size > MAX_SIZE) return false;
+  if (file.type && ACCEPTED_TYPES.includes(file.type)) return true;
+  const name = file.name.toLowerCase();
+  return ACCEPTED_EXTENSIONS.some((ext) => name.endsWith(ext));
+}
 
 interface DropZoneProps {
   onFiles: (files: File[]) => void;
@@ -17,7 +33,7 @@ export function DropZone({ onFiles, disabled, compact }: DropZoneProps) {
   const [dragActive, setDragActive] = useState(false);
 
   const handleFiles = useCallback((fileList: FileList) => {
-    const valid = Array.from(fileList).filter((f) => ACCEPTED_TYPES.includes(f.type) && f.size <= MAX_SIZE);
+    const valid = Array.from(fileList).filter(isAcceptedFile);
     if (valid.length > 0) onFiles(valid);
   }, [onFiles]);
 
@@ -29,7 +45,8 @@ export function DropZone({ onFiles, disabled, compact }: DropZoneProps) {
       onClick={() => {
         if (disabled) return;
         const input = document.createElement("input");
-        input.type = "file"; input.multiple = true; input.accept = ACCEPTED_TYPES.join(",");
+        input.type = "file"; input.multiple = true;
+        input.accept = [...ACCEPTED_TYPES, ...ACCEPTED_EXTENSIONS].join(",");
         input.onchange = () => { if (input.files) handleFiles(input.files); };
         input.click();
       }}
@@ -59,7 +76,7 @@ export function DropZone({ onFiles, disabled, compact }: DropZoneProps) {
             {dragActive ? "Birakin, yukleniyor..." : "Dosyalari surukleyin veya tiklayin"}
           </p>
           <p className={cn("text-ink-muted", compact ? "text-xs" : "text-sm")}>
-            JPG, PNG, PDF, WEBP &bull; Maks 10MB
+            JPG, PNG, HEIC, WEBP, PDF &bull; Maks 10MB
           </p>
         </div>
       </div>

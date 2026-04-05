@@ -1,9 +1,19 @@
 import { Scan, BarChart3, Bell, Users } from "lucide-react";
 import { FeatureDialog } from "./feature-dialog";
+import { FeatureVisual, type FeatureKey } from "./feature-visual";
 
-const features = [
+const features: Array<{
+  number: string;
+  key: FeatureKey;
+  icon: typeof Scan;
+  title: string;
+  headline: string;
+  description: string;
+  link: { label: string };
+}> = [
   {
     number: "01",
+    key: "scan",
     icon: Scan,
     title: "Akıllı Tarama",
     headline: "Belgelerinizi saniyeler içinde dijitalleştirin.",
@@ -13,6 +23,7 @@ const features = [
   },
   {
     number: "02",
+    key: "reports",
     icon: BarChart3,
     title: "Gelir-Gider Takibi",
     headline: "Finansal durumunuzu tek bakışta görün.",
@@ -22,6 +33,7 @@ const features = [
   },
   {
     number: "03",
+    key: "reminders",
     icon: Bell,
     title: "Akıllı Hatırlatıcılar",
     headline: "Hiçbir ödeme tarihini kaçırmayın.",
@@ -31,6 +43,7 @@ const features = [
   },
   {
     number: "04",
+    key: "team",
     icon: Users,
     title: "Çoklu Kullanıcı",
     headline: "Ekibinizle birlikte çalışın.",
@@ -58,13 +71,13 @@ export function Features() {
 
         {/* Feature rows */}
         <div className="space-y-24">
-          {features.map((feature) => (
+          {features.map((feature, idx) => (
             <div
               key={feature.number}
               className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center"
             >
               {/* Text */}
-              <div>
+              <div className={idx % 2 === 1 ? "lg:order-2" : ""}>
                 <div className="flex items-center gap-3 mb-5">
                   <span className="text-sm font-mono text-ink-faint font-medium">
                     [{feature.number}]
@@ -84,11 +97,9 @@ export function Features() {
                 </FeatureDialog>
               </div>
 
-              {/* Visual placeholder */}
-              <div className="relative">
-                <div className="aspect-[4/3] rounded-xl bg-surface border border-paper-lines flex items-center justify-center">
-                  <feature.icon className="h-16 w-16 text-ink-faint/30" strokeWidth={1} />
-                </div>
+              {/* Visual */}
+              <div className={idx % 2 === 1 ? "lg:order-1" : ""}>
+                <FeatureVisual featureKey={feature.key} />
               </div>
             </div>
           ))}

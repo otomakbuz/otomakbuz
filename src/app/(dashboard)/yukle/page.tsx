@@ -74,8 +74,8 @@ export default function UploadPage() {
         )}
       </div>
 
-      {/* ===== SPLIT LAYOUT — her zaman ikiye bölünmüş ===== */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
+      {/* ===== SPLIT LAYOUT — önizleme daha dar, form daha geniş ===== */}
+      <div className="grid grid-cols-1 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-5 items-start">
 
         {/* ====== SOL: Belge Önizleme / DropZone ====== */}
         <div className="md:sticky md:top-[76px]">

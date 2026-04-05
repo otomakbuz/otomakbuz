@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ConfidenceBadge } from "@/components/documents/confidence-badge";
 import { updateDocument, verifyDocument } from "@/lib/actions/documents";
-import { getConfidenceColor } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Document, Category, DocumentDirection, DocumentType, DocumentLineItem } from "@/types";
 import { cn } from "@/lib/utils";
@@ -70,8 +69,7 @@ export function ReviewForm({ document: doc, categories, onSaved }: ReviewFormPro
     return (
       <div
         className={cn(
-          "flex items-center gap-2 px-2 py-1.5 rounded border",
-          score !== undefined ? getConfidenceColor(score) : "border-paper-lines"
+          "flex items-center gap-2 px-2 py-1.5 rounded border border-paper-lines bg-surface"
         )}
       >
         <div className="flex-1 min-w-0 space-y-0.5">
@@ -159,12 +157,35 @@ export function ReviewForm({ document: doc, categories, onSaved }: ReviewFormPro
 
   return (
     <form action={handleSave} className="space-y-1.5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <FileText className="h-3.5 w-3.5 text-receipt-brown" />
-          <h3 className="font-semibold text-ink text-xs">Belge Bilgileri</h3>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <FileText className="h-3.5 w-3.5 text-receipt-brown flex-shrink-0" />
+          <h3 className="font-semibold text-ink text-xs whitespace-nowrap">Belge Bilgileri</h3>
         </div>
-        <ConfidenceBadge score={doc.confidence_score} showLabel />
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Button
+            type="submit"
+            size="sm"
+            disabled={saving}
+            title="Kaydet"
+            className="h-7 px-2 text-[11px] bg-receipt-brown text-white hover:bg-receipt-brown-dark"
+          >
+            <Save className="h-3 w-3 mr-1" />
+            Kaydet
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={handleVerify}
+            disabled={saving}
+            title="Doğrula"
+            className="h-7 px-2 text-[11px] border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400"
+          >
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Doğrula
+          </Button>
+        </div>
       </div>
 
       {/* Gelir / Gider Toggle */}
@@ -544,27 +565,6 @@ export function ReviewForm({ document: doc, categories, onSaved }: ReviewFormPro
         />
       </div>
 
-      {/* Sticky bottom buttons */}
-      <div className="flex gap-2 pt-2 border-t border-paper-lines">
-        <Button
-          type="submit"
-          className="flex-1 bg-receipt-brown text-white hover:bg-receipt-brown-dark"
-          disabled={saving}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Kaydet
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleVerify}
-          disabled={saving}
-          className="flex-1 border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400"
-        >
-          <CheckCircle className="h-4 w-4 mr-2" />
-          Doğrula
-        </Button>
-      </div>
     </form>
   );
 }

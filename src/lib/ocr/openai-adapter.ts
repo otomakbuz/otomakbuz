@@ -26,6 +26,36 @@ export class OpenAIOcrAdapter implements OcrAdapter {
     this.extraHeaders = opts.extraHeaders || {};
   }
 
+  /**
+   * Model yeteneklerini tespit et.
+   * OpenAI'nin strict json_schema modu sadece gpt-4o ve openai/* ailesinde çalışır.
+   * Diğer modeller (gemini, claude, qwen, llama, mistral, vb.) için json_object veya
+   * salt prompt-based JSON extraction kullanılır.
+   */
+  private getCapabilities() {
+    const m = this.model.toLowerCase();
+    const isOpenAI =
+      m.startsWith("gpt-") ||
+      m.startsWith("openai/gpt-") ||
+      m.startsWith("o1") ||
+      m.startsWith("openai/o1");
+    // json_object geniş desteklenir: OpenAI, Anthropic (Claude), Google (Gemini), Mistral, bazı DeepSeek
+    const supportsJsonObject =
+      isOpenAI ||
+      m.includes("claude") ||
+      m.includes("gemini") ||
+      m.includes("mistral") ||
+      m.includes("deepseek");
+    // detail: "high" sadece OpenAI ailesinde geçerli
+    const supportsImageDetail = isOpenAI;
+    return {
+      isOpenAI,
+      supportsStrictSchema: isOpenAI,
+      supportsJsonObject,
+      supportsImageDetail,
+    };
+  }
+
   async processDocument(fileUrl: string, fileType: string): Promise<OcrResult> {
     const isPdf = fileType.toLowerCase() === "pdf";
     if (isPdf) {
@@ -36,12 +66,50 @@ export class OpenAIOcrAdapter implements OcrAdapter {
       );
     }
 
-    const systemPrompt = `Sen Türk vergi belgelerini (VUK 229-237) analiz eden bir OCR asistanısın.
+    const caps = this.getCapabilities();
+
+    const systemPromptBase = `Sen Türk vergi belgelerini (VUK 229-237) analiz eden bir OCR asistanısın.
 Fatura, perakende fişi, serbest meslek makbuzu, gider pusulası, müstahsil makbuzu veya sevk irsaliyesi olabilir.
 Görseldeki bilgileri aşağıdaki JSON şemasına göre çıkar. Emin olmadığın alanları null bırak.
 Para birimi varsayılan TRY. Tarih formatı YYYY-MM-DD.`;
 
-    const userPrompt = `Bu belgeyi analiz et ve JSON olarak döndür. Her alan için 0-100 arası confidence (field_scores) ver.
+    // Strict schema desteklenmiyorsa, şema bilgisini sistem promptuna gömüyoruz.
+    const schemaHint = caps.supportsStrictSchema
+      ? ""
+      : `
+
+YANIT SADECE JSON OLMALI — hiç açıklama, markdown, code fence yazma.
+Şema:
+{
+  "supplier_name": string|null,
+  "supplier_tax_id": string|null,
+  "supplier_tax_office": string|null,
+  "supplier_address": string|null,
+  "buyer_name": string|null,
+  "buyer_tax_id": string|null,
+  "buyer_tax_office": string|null,
+  "buyer_address": string|null,
+  "document_type": "fatura"|"perakende_fis"|"serbest_meslek_makbuzu"|"gider_pusulasi"|"mustahsil_makbuzu"|"irsaliye"|null,
+  "document_number": string|null,
+  "issue_date": string|null,
+  "issue_time": string|null,
+  "waybill_number": string|null,
+  "subtotal_amount": number|null,
+  "vat_amount": number|null,
+  "vat_rate": number|null,
+  "withholding_amount": number|null,
+  "total_amount": number|null,
+  "currency": string,
+  "payment_method": string|null,
+  "line_items": [{"name": string, "quantity": number, "unit_price": number, "vat_rate": number|null, "total": number}]|null,
+  "raw_text": string,
+  "overall_confidence": number,
+  "field_confidence": {"supplier_name": number, "total_amount": number, ...}
+}`;
+
+    const systemPrompt = systemPromptBase + schemaHint;
+
+    const userPrompt = `Bu belgeyi analiz et ve JSON olarak döndür. Her alan için 0-100 arası confidence (field_confidence) ver.
 Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusulasi | mustahsil_makbuzu | irsaliye`;
 
     const schema = {
@@ -129,27 +197,39 @@ Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusu
       ],
     } as const;
 
-    const body = {
-      model: this.model,
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: userPrompt },
-            { type: "image_url", image_url: { url: fileUrl, detail: "high" } },
-          ],
-        },
-      ],
-      response_format: {
+    // Görsel içerik — detail sadece OpenAI ailesinde gönderilir
+    const imageContent = caps.supportsImageDetail
+      ? { type: "image_url", image_url: { url: fileUrl, detail: "high" } }
+      : { type: "image_url", image_url: { url: fileUrl } };
+
+    // Response format — modelin yeteneğine göre seç
+    let responseFormat: Record<string, unknown> | undefined;
+    if (caps.supportsStrictSchema) {
+      responseFormat = {
         type: "json_schema",
         json_schema: {
           name: "turkish_tax_document",
           schema,
           strict: true,
         },
-      },
+      };
+    } else if (caps.supportsJsonObject) {
+      responseFormat = { type: "json_object" };
+    }
+    // Desteklemeyen modeller için response_format hiç gönderilmez — promptla yetiniriz.
+
+    const body: Record<string, unknown> = {
+      model: this.model,
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [{ type: "text", text: userPrompt }, imageContent],
+        },
+      ],
+      temperature: 0.1,
     };
+    if (responseFormat) body.response_format = responseFormat;
 
     const res = await fetch(`${this.baseURL}/chat/completions`, {
       method: "POST",
@@ -163,7 +243,35 @@ Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusu
 
     if (!res.ok) {
       const errBody = await res.text();
-      throw new Error(`OCR hatası (${res.status}): ${errBody.slice(0, 300)}`);
+      // Sağlayıcı hata mesajını temizle, kullanıcıya okunur bir metin üret
+      let friendly = errBody.slice(0, 300);
+      try {
+        const parsed = JSON.parse(errBody) as {
+          error?: {
+            message?: string;
+            metadata?: { raw?: string; provider_name?: string };
+          };
+        };
+        const raw = parsed.error?.metadata?.raw;
+        const msg = parsed.error?.message;
+        const provider = parsed.error?.metadata?.provider_name;
+        if (raw) friendly = raw;
+        else if (msg) friendly = provider ? `${provider}: ${msg}` : msg;
+      } catch {
+        // JSON değilse ham metni kullan
+      }
+
+      if (res.status === 429) {
+        throw new Error(
+          `OCR servisi şu anda yoğun (rate limit). ${friendly} — Ayarlar'dan farklı bir model seçin veya kendi API anahtarınızı ekleyin.`
+        );
+      }
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(
+          `OCR yetkilendirme hatası. API anahtarınızı Ayarlar > OCR bölümünden kontrol edin. (${friendly})`
+        );
+      }
+      throw new Error(`OCR hatası (${res.status}): ${friendly}`);
     }
 
     const json = (await res.json()) as {
@@ -172,14 +280,31 @@ Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusu
     };
 
     const content = json.choices?.[0]?.message?.content;
-    if (!content) throw new Error("OpenAI yanıtı boş");
+    if (!content)
+      throw new Error(
+        `Model (${this.model}) boş yanıt döndü. Farklı bir model deneyin.`
+      );
+
+    // Esnek JSON extraction — model markdown code fence veya ön/arka metinle sarmış olabilir
+    const extractJson = (text: string): string => {
+      // Markdown code fence (```json ... ```)
+      const fence = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fence) return fence[1].trim();
+      // İlk { ile son } arası
+      const first = text.indexOf("{");
+      const last = text.lastIndexOf("}");
+      if (first !== -1 && last > first) return text.slice(first, last + 1);
+      return text.trim();
+    };
 
     let parsed: Record<string, unknown>;
     try {
-      parsed = JSON.parse(content);
+      parsed = JSON.parse(extractJson(content));
     } catch (e) {
       throw new Error(
-        `OpenAI JSON parse hatası: ${e instanceof Error ? e.message : "bilinmeyen"}`
+        `Model (${this.model}) geçerli JSON üretemedi: ${
+          e instanceof Error ? e.message : "bilinmeyen"
+        }. Daha yetenekli bir model seçin (ör. gpt-4o-mini, gemini-2.0-flash, claude-3-5-sonnet).`
       );
     }
 

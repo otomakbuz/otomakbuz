@@ -19,18 +19,27 @@ export async function uploadAndProcessDocument(formData: FormData) {
   const { error: uploadError } = await supabase.storage.from("documents").upload(filePath, file);
   if (uploadError) throw new Error(`Yukleme hatasi: ${uploadError.message}`);
 
-  const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(filePath);
+  // Signed URL — bucket private olduğu için public URL 400 dönüyor.
+  // 1 yıl expiry ile imzalı URL üretip hem OCR'a hem DB'ye veriyoruz.
+  const ONE_YEAR = 60 * 60 * 24 * 365;
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from("documents")
+    .createSignedUrl(filePath, ONE_YEAR);
+  if (signedError || !signedData?.signedUrl) {
+    throw new Error(`Signed URL hatasi: ${signedError?.message ?? "bilinmiyor"}`);
+  }
+  const fileUrl = signedData.signedUrl;
 
   const { data: doc, error: insertError } = await supabase
     .from("documents")
-    .insert({ workspace_id: workspace.id, user_id: user.id, original_file_url: publicUrl, file_type: fileExt, status: "processing" })
+    .insert({ workspace_id: workspace.id, user_id: user.id, original_file_url: fileUrl, file_type: fileExt, status: "processing" })
     .select().single();
 
   if (insertError) throw new Error(insertError.message);
 
   try {
     const ocr = await getOcrAdapter(workspace.id);
-    const result = await ocr.processDocument(publicUrl, fileExt);
+    const result = await ocr.processDocument(fileUrl, fileExt);
 
     const { data: updatedDoc, error: updateError } = await supabase
       .from("documents")

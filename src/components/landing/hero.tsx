@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { DashboardMockup } from "./dashboard-mockup";
 import { AnnouncementDialog } from "./announcement-dialog";
 import { Hero3D } from "./hero-3d";
+import { ScanningDocument } from "./scanning-document";
 
 export function Hero() {
   return (
@@ -12,6 +13,9 @@ export function Hero() {
       <div className="absolute inset-0 h-[min(900px,100vh)] opacity-90">
         <Hero3D />
       </div>
+
+      {/* Sol tarafta taranan belge animasyonu */}
+      <ScanningDocument />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-0">
         <div className="text-center max-w-3xl mx-auto">
