@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -34,13 +35,15 @@ export async function signOut() {
   redirect("/giris");
 }
 
-export async function getUser() {
+// Request-scoped cache: aynı render / action sırasında tekrarlanan
+// auth.getUser() ve workspace sorgularını dedupe eder.
+const _getUserCached = cache(async () => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user;
-}
+});
 
-export async function getUserWorkspace() {
+const _getUserWorkspaceCached = cache(async () => {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
@@ -52,4 +55,12 @@ export async function getUserWorkspace() {
     .single();
 
   return workspace;
+});
+
+export async function getUser() {
+  return _getUserCached();
+}
+
+export async function getUserWorkspace() {
+  return _getUserWorkspaceCached();
 }

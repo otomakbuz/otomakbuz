@@ -4,10 +4,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { getCategories, createCategory, updateCategory, deleteCategory } from "@/lib/actions/categories";
-import { getUserWorkspace } from "@/lib/actions/auth";
+import { createCategory, updateCategory, deleteCategory } from "@/lib/actions/categories";
 import { updateWorkspace } from "@/lib/actions/workspace";
-import { getTeamMembers, getPendingInvitations, getUserRole } from "@/lib/actions/team";
+import { getSettingsPageData } from "@/lib/actions/settings-page";
 import { toast } from "sonner";
 import { Plus, Trash2, Pencil, Settings, Tag, Save, Users, Plug, Mail, FileSpreadsheet, Copy, Check, Brain } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,11 +43,16 @@ export default function SettingsPage() {
     if (t && tabs.some((x) => x.id === t)) {
       setActiveTab(t as TabId);
     }
-    getUserWorkspace().then((ws) => setWorkspace(ws as Workspace | null));
-    getCategories().then(setCategories);
-    getTeamMembers().then(setMembers).catch(() => {});
-    getPendingInvitations().then(setInvitations).catch(() => {});
-    getUserRole().then(setCurrentRole).catch(() => {});
+    // Tek server action içinde Promise.all ile 5 sorguyu paralel çalıştır
+    // (Next.js server action'ları aynı client oturumunda seri kuyruklar,
+    // bu yüzden bundle'lamak tek yoldur).
+    getSettingsPageData().then((data) => {
+      setWorkspace(data.workspace);
+      setCategories(data.categories);
+      setMembers(data.members);
+      setInvitations(data.invitations);
+      setCurrentRole(data.role);
+    });
   }, []);
 
   async function handleSaveWorkspace(formData: FormData) {

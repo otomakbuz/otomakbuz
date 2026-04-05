@@ -1,29 +1,34 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getUserWorkspace } from "./auth";
 import type { Category } from "@/types";
 
 export async function getCategories() {
   const supabase = await createClient();
-  const workspace = await getUserWorkspace();
-  if (!workspace) return [];
 
+  // RLS policy 'categories_select' zaten workspace_id = get_user_workspace_id()
+  // ile filtreliyor — ekstra auth + workspace round-trip'e gerek yok.
   const { data, error } = await supabase
-    .from("categories").select("*")
-    .eq("workspace_id", workspace.id).order("name");
+    .from("categories")
+    .select("*")
+    .order("name");
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    // Oturum yoksa boş liste dön (RLS 0 satır döndürür, ama güvenli taraf)
+    return [] as Category[];
+  }
   return (data || []) as Category[];
 }
 
 export async function createCategory(name: string, color: string) {
   const supabase = await createClient();
-  const workspace = await getUserWorkspace();
-  if (!workspace) throw new Error("Calisma alani bulunamadi");
+
+  // Tek SQL çağrısı ile workspace id'yi al (auth + workspace table yerine)
+  const { data: wsId } = await supabase.rpc("get_user_workspace_id");
+  if (!wsId) throw new Error("Calisma alani bulunamadi");
 
   const { data, error } = await supabase
-    .from("categories").insert({ workspace_id: workspace.id, name, color })
+    .from("categories").insert({ workspace_id: wsId, name, color })
     .select().single();
 
   if (error) throw new Error(error.message);
