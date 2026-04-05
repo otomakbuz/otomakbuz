@@ -402,10 +402,15 @@ const WEIGHTED_TYPES: NonNullable<DocumentType>[] = [
 ];
 
 export class MockOcrAdapter implements OcrAdapter {
-  async processDocument(_fileUrl: string, _fileType: string): Promise<OcrResult> {
+  async processDocument(_fileUrl: string, _fileType: string): Promise<OcrResult[]> {
     await new Promise((resolve) => setTimeout(resolve, Math.random() * 500 + 300));
-    const docType = pick(WEIGHTED_TYPES);
-    const result = generateForType(docType);
-    return computeFieldScores(result);
+    // %20 ihtimalle 2-3 belge üret (çoklu-fiş fotoğrafı simülasyonu)
+    const count = Math.random() < 0.2 ? Math.floor(Math.random() * 2) + 2 : 1;
+    const results: OcrResult[] = [];
+    for (let i = 0; i < count; i++) {
+      const docType = pick(WEIGHTED_TYPES);
+      results.push(computeFieldScores(generateForType(docType)));
+    }
+    return results;
   }
 }

@@ -67,6 +67,14 @@ export interface OcrResult {
   field_scores: Partial<OcrFieldScore>;
 }
 
+/**
+ * OCR sonucu — her zaman bir dizi döner.
+ *
+ * Tek belge içeren görsellerde dizi tek elemanlıdır. Bir fotoğrafta
+ * birden fazla fiş/fatura varsa (ör. masadaki 5 fiş tek karede),
+ * her biri ayrı eleman olur. Sıralama görsel soldan-sağa/yukarıdan-
+ * aşağıya doğru yapılır.
+ */
 export interface OcrAdapter {
-  processDocument(fileUrl: string, fileType: string): Promise<OcrResult>;
+  processDocument(fileUrl: string, fileType: string): Promise<OcrResult[]>;
 }

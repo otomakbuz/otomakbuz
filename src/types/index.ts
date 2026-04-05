@@ -194,6 +194,8 @@ export interface Document {
   parsed_json: Record<string, unknown> | null;
   // Tekilleştirme — SHA-256 hex, workspace içinde unique
   file_hash: string | null;
+  // Çoklu-fiş fotoğrafında 0-tabanlı sıra (tek belgede 0)
+  sub_index: number;
   created_at: string;
   updated_at: string;
   category?: Category | null;

@@ -56,7 +56,7 @@ export class OpenAIOcrAdapter implements OcrAdapter {
     };
   }
 
-  async processDocument(fileUrl: string, fileType: string): Promise<OcrResult> {
+  async processDocument(fileUrl: string, fileType: string): Promise<OcrResult[]> {
     const isPdf = fileType.toLowerCase() === "pdf";
     if (isPdf) {
       // GPT-4o Vision native PDF desteği henüz sınırlı — MVP için PDF'yi reddediyoruz.
@@ -69,9 +69,21 @@ export class OpenAIOcrAdapter implements OcrAdapter {
     const caps = this.getCapabilities();
 
     const systemPromptBase = `Sen Türk vergi belgelerini (VUK 229-237) analiz eden bir OCR asistanısın.
-Fatura, perakende fişi, serbest meslek makbuzu, gider pusulası, müstahsil makbuzu veya sevk irsaliyesi olabilir.
-Görseldeki bilgileri aşağıdaki JSON şemasına göre çıkar. Emin olmadığın alanları null bırak.
-Para birimi varsayılan TRY. Tarih formatı YYYY-MM-DD.`;
+Görselde fatura, perakende fişi, serbest meslek makbuzu, gider pusulası, müstahsil makbuzu veya sevk irsaliyesi olabilir.
+
+ÖNEMLİ — ÇOKLU BELGE TESPİTİ:
+Bir görselde BİRDEN FAZLA belge olabilir (masanın üzerine dizilmiş
+fişler, yan yana konmuş faturalar, üst üste kısmen duran makbuzlar).
+Her bir fiziksel belgeyi AYRI bir öğe olarak tespit et ve "documents"
+dizisine ekle. İki fiş birbirine değiyor olsa bile ayrı belgelerdir.
+
+Tek belge varsa documents dizisinde tek eleman olur.
+Birden fazla belge varsa soldan-sağa / yukarıdan-aşağıya sıralı ekle.
+Her belge için ayrı ayrı supplier, tutar, tarih, belge numarası vs. çıkar —
+alanları belgeler arasında karıştırma. İki farklı fişin toplamlarını TOPLAMA.
+
+Emin olmadığın alanları null bırak. Para birimi varsayılan TRY.
+Tarih formatı YYYY-MM-DD.`;
 
     // Strict schema desteklenmiyorsa, şema bilgisini sistem promptuna gömüyoruz.
     const schemaHint = caps.supportsStrictSchema
@@ -81,38 +93,42 @@ Para birimi varsayılan TRY. Tarih formatı YYYY-MM-DD.`;
 YANIT SADECE JSON OLMALI — hiç açıklama, markdown, code fence yazma.
 Şema:
 {
-  "supplier_name": string|null,
-  "supplier_tax_id": string|null,
-  "supplier_tax_office": string|null,
-  "supplier_address": string|null,
-  "buyer_name": string|null,
-  "buyer_tax_id": string|null,
-  "buyer_tax_office": string|null,
-  "buyer_address": string|null,
-  "document_type": "fatura"|"perakende_fis"|"serbest_meslek_makbuzu"|"gider_pusulasi"|"mustahsil_makbuzu"|"irsaliye"|null,
-  "document_number": string|null,
-  "issue_date": string|null,
-  "issue_time": string|null,
-  "waybill_number": string|null,
-  "subtotal_amount": number|null,
-  "vat_amount": number|null,
-  "vat_rate": number|null,
-  "withholding_amount": number|null,
-  "total_amount": number|null,
-  "currency": string,
-  "payment_method": string|null,
-  "line_items": [{"name": string, "quantity": number, "unit_price": number, "vat_rate": number|null, "total": number}]|null,
-  "raw_text": string,
-  "overall_confidence": number,
-  "field_confidence": {"supplier_name": number, "total_amount": number, ...}
+  "documents": [
+    {
+      "supplier_name": string|null,
+      "supplier_tax_id": string|null,
+      "supplier_tax_office": string|null,
+      "supplier_address": string|null,
+      "buyer_name": string|null,
+      "buyer_tax_id": string|null,
+      "buyer_tax_office": string|null,
+      "buyer_address": string|null,
+      "document_type": "fatura"|"perakende_fis"|"serbest_meslek_makbuzu"|"gider_pusulasi"|"mustahsil_makbuzu"|"irsaliye"|null,
+      "document_number": string|null,
+      "issue_date": string|null,
+      "issue_time": string|null,
+      "waybill_number": string|null,
+      "subtotal_amount": number|null,
+      "vat_amount": number|null,
+      "vat_rate": number|null,
+      "withholding_amount": number|null,
+      "total_amount": number|null,
+      "currency": string,
+      "payment_method": string|null,
+      "line_items": [{"name": string, "quantity": number, "unit_price": number, "vat_rate": number|null, "total": number}]|null,
+      "raw_text": string,
+      "overall_confidence": number,
+      "field_confidence": {"supplier_name": number, "total_amount": number, ...}
+    }
+  ]
 }`;
 
     const systemPrompt = systemPromptBase + schemaHint;
 
-    const userPrompt = `Bu belgeyi analiz et ve JSON olarak döndür. Her alan için 0-100 arası confidence (field_confidence) ver.
-Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusulasi | mustahsil_makbuzu | irsaliye`;
+    const userPrompt = `Bu görseldeki TÜM belgeleri analiz et. Görselde kaç tane ayrı fiş/fatura varsa hepsini "documents" dizisine ekle. Tek belge varsa dizi tek elemanlı olur. Her belge için 0-100 arası confidence (field_confidence) ver. Belge türleri: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusulasi | mustahsil_makbuzu | irsaliye`;
 
-    const schema = {
+    // Her belge için schema
+    const documentSchema = {
       type: "object",
       additionalProperties: false,
       properties: {
@@ -195,6 +211,19 @@ Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusu
         "overall_confidence",
         "field_confidence",
       ],
+    } as const;
+
+    // Top-level wrapper: { documents: [...] }
+    const schema = {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        documents: {
+          type: "array",
+          items: documentSchema,
+        },
+      },
+      required: ["documents"],
     } as const;
 
     // Görsel içerik — detail sadece OpenAI ailesinde gönderilir
@@ -308,59 +337,83 @@ Belge türü için: fatura | perakende_fis | serbest_meslek_makbuzu | gider_pusu
       );
     }
 
-    // Field scores'u OcrFieldScore şemasına çevir
-    const fieldConf = (parsed.field_confidence as Record<string, number>) || {};
-    const field_scores = {
-      supplier_name: fieldConf.supplier_name ?? 0,
-      supplier_tax_id: fieldConf.supplier_tax_id ?? 0,
-      supplier_tax_office: fieldConf.supplier_tax_office ?? 0,
-      supplier_address: fieldConf.supplier_address ?? 0,
-      buyer_name: fieldConf.buyer_name ?? 0,
-      buyer_tax_id: fieldConf.buyer_tax_id ?? 0,
-      buyer_tax_office: fieldConf.buyer_tax_office ?? 0,
-      buyer_address: fieldConf.buyer_address ?? 0,
-      document_type: fieldConf.document_type ?? 0,
-      document_number: fieldConf.document_number ?? 0,
-      issue_date: fieldConf.issue_date ?? 0,
-      issue_time: fieldConf.issue_time ?? 0,
-      waybill_number: fieldConf.waybill_number ?? 0,
-      subtotal_amount: fieldConf.subtotal_amount ?? 0,
-      vat_amount: fieldConf.vat_amount ?? 0,
-      vat_rate: fieldConf.vat_rate ?? 0,
-      withholding_amount: fieldConf.withholding_amount ?? 0,
-      total_amount: fieldConf.total_amount ?? 0,
-      currency: fieldConf.currency ?? 100,
-      payment_method: fieldConf.payment_method ?? 0,
-      line_items: fieldConf.line_items ?? 0,
+    // Bazı modeller "documents" dizisini sarmadan tek belgeyi root'a koyabilir.
+    // Geriye uyumluluk: her iki biçimi de destekle.
+    let docs: Record<string, unknown>[];
+    if (Array.isArray(parsed.documents)) {
+      docs = parsed.documents as Record<string, unknown>[];
+    } else if (parsed.supplier_name !== undefined || parsed.total_amount !== undefined) {
+      // Tek belgeli eski biçim — diziye sar
+      docs = [parsed];
+    } else {
+      throw new Error(
+        `Model (${this.model}) 'documents' dizisi döndürmedi. Farklı bir model deneyin.`
+      );
+    }
+
+    if (docs.length === 0) {
+      throw new Error(
+        `Model (${this.model}) görselde hiç belge tespit edemedi. Lütfen daha net bir fotoğraf yükleyin.`
+      );
+    }
+
+    // Her belgeyi OcrResult'a dönüştür
+    const mapDoc = (doc: Record<string, unknown>): OcrResult => {
+      const fieldConf = (doc.field_confidence as Record<string, number>) || {};
+      const field_scores = {
+        supplier_name: fieldConf.supplier_name ?? 0,
+        supplier_tax_id: fieldConf.supplier_tax_id ?? 0,
+        supplier_tax_office: fieldConf.supplier_tax_office ?? 0,
+        supplier_address: fieldConf.supplier_address ?? 0,
+        buyer_name: fieldConf.buyer_name ?? 0,
+        buyer_tax_id: fieldConf.buyer_tax_id ?? 0,
+        buyer_tax_office: fieldConf.buyer_tax_office ?? 0,
+        buyer_address: fieldConf.buyer_address ?? 0,
+        document_type: fieldConf.document_type ?? 0,
+        document_number: fieldConf.document_number ?? 0,
+        issue_date: fieldConf.issue_date ?? 0,
+        issue_time: fieldConf.issue_time ?? 0,
+        waybill_number: fieldConf.waybill_number ?? 0,
+        subtotal_amount: fieldConf.subtotal_amount ?? 0,
+        vat_amount: fieldConf.vat_amount ?? 0,
+        vat_rate: fieldConf.vat_rate ?? 0,
+        withholding_amount: fieldConf.withholding_amount ?? 0,
+        total_amount: fieldConf.total_amount ?? 0,
+        currency: fieldConf.currency ?? 100,
+        payment_method: fieldConf.payment_method ?? 0,
+        line_items: fieldConf.line_items ?? 0,
+      };
+
+      return {
+        supplier_name: (doc.supplier_name as string) ?? null,
+        supplier_tax_id: (doc.supplier_tax_id as string) ?? null,
+        supplier_tax_office: (doc.supplier_tax_office as string) ?? null,
+        supplier_address: (doc.supplier_address as string) ?? null,
+        buyer_name: (doc.buyer_name as string) ?? null,
+        buyer_tax_id: (doc.buyer_tax_id as string) ?? null,
+        buyer_tax_office: (doc.buyer_tax_office as string) ?? null,
+        buyer_address: (doc.buyer_address as string) ?? null,
+        document_type: (doc.document_type as string) ?? null,
+        document_number: (doc.document_number as string) ?? null,
+        issue_date: (doc.issue_date as string) ?? null,
+        issue_time: (doc.issue_time as string) ?? null,
+        waybill_number: (doc.waybill_number as string) ?? null,
+        subtotal_amount: (doc.subtotal_amount as number) ?? null,
+        vat_amount: (doc.vat_amount as number) ?? null,
+        vat_rate: (doc.vat_rate as number) ?? null,
+        withholding_amount: (doc.withholding_amount as number) ?? null,
+        total_amount: (doc.total_amount as number) ?? null,
+        currency: (doc.currency as string) || "TRY",
+        payment_method: (doc.payment_method as string) ?? null,
+        line_items: (doc.line_items as OcrLineItem[]) ?? null,
+        raw_ocr_text: (doc.raw_text as string) || "",
+        confidence_score: Math.round(
+          ((doc.overall_confidence as number) ?? 0) as number
+        ),
+        field_scores,
+      };
     };
 
-    return {
-      supplier_name: (parsed.supplier_name as string) ?? null,
-      supplier_tax_id: (parsed.supplier_tax_id as string) ?? null,
-      supplier_tax_office: (parsed.supplier_tax_office as string) ?? null,
-      supplier_address: (parsed.supplier_address as string) ?? null,
-      buyer_name: (parsed.buyer_name as string) ?? null,
-      buyer_tax_id: (parsed.buyer_tax_id as string) ?? null,
-      buyer_tax_office: (parsed.buyer_tax_office as string) ?? null,
-      buyer_address: (parsed.buyer_address as string) ?? null,
-      document_type: (parsed.document_type as string) ?? null,
-      document_number: (parsed.document_number as string) ?? null,
-      issue_date: (parsed.issue_date as string) ?? null,
-      issue_time: (parsed.issue_time as string) ?? null,
-      waybill_number: (parsed.waybill_number as string) ?? null,
-      subtotal_amount: (parsed.subtotal_amount as number) ?? null,
-      vat_amount: (parsed.vat_amount as number) ?? null,
-      vat_rate: (parsed.vat_rate as number) ?? null,
-      withholding_amount: (parsed.withholding_amount as number) ?? null,
-      total_amount: (parsed.total_amount as number) ?? null,
-      currency: (parsed.currency as string) || "TRY",
-      payment_method: (parsed.payment_method as string) ?? null,
-      line_items: (parsed.line_items as OcrLineItem[]) ?? null,
-      raw_ocr_text: (parsed.raw_text as string) || "",
-      confidence_score: Math.round(
-        ((parsed.overall_confidence as number) ?? 0) as number
-      ),
-      field_scores,
-    };
+    return docs.map(mapDoc);
   }
 }

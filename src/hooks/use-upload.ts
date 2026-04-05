@@ -11,6 +11,10 @@ export type UploadItem = {
   status: "pending" | "uploading" | "done" | "error";
   result?: Document;
   error?: string;
+  /** Aynı fotoğraftaki belge sırası (çoklu fiş fotoğrafı için) */
+  subIndex?: number;
+  /** Aynı fotoğraftaki toplam belge sayısı */
+  totalInFile?: number;
 };
 
 export function useUpload() {
@@ -18,6 +22,8 @@ export function useUpload() {
   const [activeReviewId, setActiveReviewId] = useState<string | null>(null);
 
   const addFiles = useCallback((files: File[]) => {
+    // Her dosya için bir "placeholder" item — OCR bittiğinde gerçek belgelere
+    // fan-out edilir (1 fotoğrafta 3 fiş varsa 3 item'e dönüşür).
     const newItems: UploadItem[] = files.map((file) => ({
       id: crypto.randomUUID(), file, status: "pending",
     }));
@@ -30,9 +36,61 @@ export function useUpload() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const result = await uploadAndProcessDocument(formData);
-      setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "done", result } : i)));
+      const { documents, skipped } = await uploadAndProcessDocument(formData);
+
+      if (documents.length === 0) {
+        throw new Error("Belge kaydedilemedi");
+      }
+
+      // Atlanan içerik ikizleri varsa kullanıcıya bildir (toast)
+      if (skipped.length > 0) {
+        toast.warning(
+          `${skipped.length} belge zaten kayıtlı olduğu için atlandı`
+        );
+      }
+
+      // Tek belge: mevcut item'ı güncelle.
+      // Çoklu belge: mevcut item'ı ilk belgeyle doldur, geri kalanları yeni item olarak ekle.
+      if (documents.length === 1) {
+        const doc = documents[0];
+        setItems((prev) =>
+          prev.map((i) =>
+            i.id === itemId ? { ...i, status: "done", result: doc } : i
+          )
+        );
+        setActiveReviewId((current) => current ?? itemId);
+        return;
+      }
+
+      // Çoklu — fan out
+      const firstDoc = documents[0];
+      const extraItems: UploadItem[] = documents.slice(1).map((doc, idx) => ({
+        id: crypto.randomUUID(),
+        file,
+        status: "done" as const,
+        result: doc,
+        subIndex: idx + 1,
+        totalInFile: documents.length,
+      }));
+
+      setItems((prev) => {
+        const idx = prev.findIndex((i) => i.id === itemId);
+        if (idx === -1) return prev;
+        const updated = [...prev];
+        updated[idx] = {
+          ...updated[idx],
+          status: "done",
+          result: firstDoc,
+          subIndex: 0,
+          totalInFile: documents.length,
+        };
+        // İlk item'dan hemen sonra ekstraları araya sıkıştır
+        updated.splice(idx + 1, 0, ...extraItems);
+        return updated;
+      });
+
       setActiveReviewId((current) => current ?? itemId);
+      toast.success(`${documents.length} belge bir fotoğraftan çıkarıldı`);
     } catch (err) {
       const rawMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
       // DUPLICATE: prefix'i upload.ts'den gelir; kullanıcı dostu toast göster

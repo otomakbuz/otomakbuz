@@ -37,7 +37,7 @@ export class FallbackOcrAdapter implements OcrAdapter {
     this.baseDelay = opts.retryDelayMs ?? 1000;
   }
 
-  async processDocument(fileUrl: string, fileType: string): Promise<OcrResult> {
+  async processDocument(fileUrl: string, fileType: string): Promise<OcrResult[]> {
     const errors: string[] = [];
 
     for (let i = 0; i < this.entries.length; i++) {

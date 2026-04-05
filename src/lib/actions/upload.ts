@@ -26,7 +26,17 @@ function duplicateError(existingId: string, reason: "file" | "content"): Error {
   return err;
 }
 
-export async function uploadAndProcessDocument(formData: FormData) {
+/**
+ * Multi-document upload sonucu. Bir fotoğrafta birden fazla fiş/fatura
+ * olduğunda OCR N tane OcrResult döner; her biri ayrı documents satırı
+ * olur (aynı file_hash + farklı sub_index).
+ */
+export interface UploadResult {
+  documents: import("@/types").Document[];
+  skipped: { reason: "content-duplicate"; existingId: string; subIndex: number }[];
+}
+
+export async function uploadAndProcessDocument(formData: FormData): Promise<UploadResult> {
   const supabase = await createClient();
   const user = await getUser();
   const workspace = await getUserWorkspace();
@@ -65,40 +75,47 @@ export async function uploadAndProcessDocument(formData: FormData) {
     .from("documents")
     .createSignedUrl(filePath, ONE_YEAR);
   if (signedError || !signedData?.signedUrl) {
+    await supabase.storage.from("documents").remove([filePath]);
     throw new Error(`Signed URL hatasi: ${signedError?.message ?? "bilinmiyor"}`);
   }
   const fileUrl = signedData.signedUrl;
 
-  const { data: doc, error: insertError } = await supabase
-    .from("documents")
-    .insert({
-      workspace_id: workspace.id,
-      user_id: user.id,
-      original_file_url: fileUrl,
-      file_type: fileExt,
-      file_hash: fileHash,
-      status: "processing",
-    })
-    .select()
-    .single();
-
-  if (insertError) {
-    // Race: aynı anda iki upload → unique index 23505 döner
-    if (insertError.code === "23505") {
-      // Storage'a yüklenen orphan dosyayı temizle
-      await supabase.storage.from("documents").remove([filePath]);
-      throw duplicateError("race", "file");
-    }
-    throw new Error(insertError.message);
-  }
-
+  // ───────────────────────────────────────────────────────────
+  // OCR — tek görselde N belge olabilir
+  // ───────────────────────────────────────────────────────────
+  let results;
   try {
     const ocr = await getOcrAdapter(workspace.id);
-    const result = await ocr.processDocument(fileUrl, fileExt);
+    results = await ocr.processDocument(fileUrl, fileExt);
+  } catch (ocrError) {
+    // OCR tamamen başarısız — storage'a yüklenen orphan dosyayı temizle
+    await supabase.storage.from("documents").remove([filePath]);
+    throw ocrError;
+  }
 
-    const { data: updatedDoc, error: updateError } = await supabase
+  if (!results || results.length === 0) {
+    await supabase.storage.from("documents").remove([filePath]);
+    throw new Error("OCR belgeyi okuyamadı. Lütfen daha net bir fotoğraf yükleyin.");
+  }
+
+  // ───────────────────────────────────────────────────────────
+  // Her belgeyi ayrı satır olarak insert et
+  // ───────────────────────────────────────────────────────────
+  const created: import("@/types").Document[] = [];
+  const skipped: UploadResult["skipped"] = [];
+
+  for (let i = 0; i < results.length; i++) {
+    const result = results[i];
+    const { data: insertedDoc, error: insertError } = await supabase
       .from("documents")
-      .update({
+      .insert({
+        workspace_id: workspace.id,
+        user_id: user.id,
+        original_file_url: fileUrl,
+        file_type: fileExt,
+        file_hash: fileHash,
+        sub_index: i,
+        status: "needs_review",
         document_type: result.document_type,
         // Düzenleyen (satıcı)
         supplier_name: result.supplier_name,
@@ -130,48 +147,55 @@ export async function uploadAndProcessDocument(formData: FormData) {
         confidence_score: result.confidence_score,
         field_scores: result.field_scores,
         parsed_json: result as unknown as Record<string, unknown>,
-        status: "needs_review",
       })
-      .eq("id", doc.id)
       .select("*, category:categories(*)")
       .single();
 
-    if (updateError) {
-      // Katman 2: içerik tuple'ı (supplier_tax_id + document_number + issue_date)
-      // başka bir belgeyle çakıştıysa → 23505
-      if (updateError.code === "23505") {
-        // Yeni yüklenen satırı ve dosyayı temizle
-        await supabase.from("documents").delete().eq("id", doc.id);
-        await supabase.storage.from("documents").remove([filePath]);
-
-        // Mevcut çakışan kaydı bul (kullanıcıya ID göster)
+    if (insertError) {
+      // 23505: ya file_hash + sub_index çakıştı (race) ya da içerik tuple
+      // (supplier_tax_id + document_number + issue_date) başka bir belgeyle çakıştı.
+      if (insertError.code === "23505") {
         const { data: clash } = await supabase
           .from("documents")
           .select("id")
           .eq("workspace_id", workspace.id)
-          .eq("supplier_tax_id", result.supplier_tax_id)
-          .eq("document_number", result.document_number)
-          .eq("issue_date", result.issue_date)
-          .neq("id", doc.id)
+          .eq("supplier_tax_id", result.supplier_tax_id ?? "")
+          .eq("document_number", result.document_number ?? "")
+          .eq("issue_date", result.issue_date ?? "")
           .limit(1)
           .maybeSingle();
-
-        throw duplicateError(clash?.id ?? "unknown", "content");
+        skipped.push({
+          reason: "content-duplicate",
+          existingId: clash?.id ?? "unknown",
+          subIndex: i,
+        });
+        console.warn(
+          `[upload] belge #${i} içerik ikizi olduğu için atlandı (mevcut: ${clash?.id?.slice(0, 8) ?? "?"})`
+        );
+        continue;
       }
-      throw new Error(updateError.message);
+      // Diğer DB hataları — bu satırı atla ama log'la
+      console.error(`[upload] belge #${i} insert hatası:`, insertError);
+      continue;
     }
 
+    created.push(insertedDoc);
     await supabase.from("audit_logs").insert({
-      document_id: doc.id, user_id: user.id, action_type: "created", new_value: updatedDoc,
+      document_id: insertedDoc.id,
+      user_id: user.id,
+      action_type: "created",
+      new_value: insertedDoc,
     });
-
-    return updatedDoc;
-  } catch (ocrError) {
-    // DUPLICATE hatasını olduğu gibi yukarı taşı (UI yakalayacak)
-    if (ocrError instanceof Error && ocrError.message.startsWith("DUPLICATE:")) {
-      throw ocrError;
-    }
-    await supabase.from("documents").update({ status: "failed" }).eq("id", doc.id);
-    throw ocrError;
   }
+
+  // Hiçbir belge başarılı olmadıysa: orphan storage dosyasını temizle ve hata fırlat
+  if (created.length === 0) {
+    await supabase.storage.from("documents").remove([filePath]);
+    if (skipped.length > 0) {
+      throw duplicateError(skipped[0].existingId, "content");
+    }
+    throw new Error("Belge(ler) kaydedilemedi. Lütfen tekrar deneyin.");
+  }
+
+  return { documents: created, skipped };
 }
