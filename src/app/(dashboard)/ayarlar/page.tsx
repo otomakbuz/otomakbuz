@@ -43,16 +43,26 @@ export default function SettingsPage() {
     if (t && tabs.some((x) => x.id === t)) {
       setActiveTab(t as TabId);
     }
-    // Tek server action içinde Promise.all ile 5 sorguyu paralel çalıştır
+    // Tek server action içinde Promise.allSettled ile 5 sorguyu paralel çalıştır
     // (Next.js server action'ları aynı client oturumunda seri kuyruklar,
     // bu yüzden bundle'lamak tek yoldur).
-    getSettingsPageData().then((data) => {
-      setWorkspace(data.workspace);
-      setCategories(data.categories);
-      setMembers(data.members);
-      setInvitations(data.invitations);
-      setCurrentRole(data.role);
-    });
+    getSettingsPageData()
+      .then((data) => {
+        setWorkspace(data.workspace);
+        setCategories(data.categories);
+        setMembers(data.members);
+        setInvitations(data.invitations);
+        setCurrentRole(data.role);
+        if (data.errors.length > 0) {
+          toast.error(
+            `Bazı ayar verileri yüklenemedi: ${data.errors.join(", ")}`
+          );
+        }
+      })
+      .catch((err) => {
+        console.error("[ayarlar] getSettingsPageData fatal:", err);
+        toast.error("Ayarlar yüklenemedi. Lütfen sayfayı yenileyin.");
+      });
   }, []);
 
   async function handleSaveWorkspace(formData: FormData) {

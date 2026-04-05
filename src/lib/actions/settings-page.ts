@@ -3,7 +3,11 @@
 // Ayarlar sayfası için tek round-trip veri yükleyici.
 // Next.js server action'ları aynı client oturumunda SERİ çalıştırır
 // (race condition'ları engellemek için). Bu yüzden 5 ayrı action yerine
-// tek bir action içinde Promise.all ile paralelleştiriyoruz.
+// tek bir action içinde Promise.allSettled ile paralelleştiriyoruz.
+//
+// allSettled tercih sebebi: bir sorgu fail olsa bile diğerlerini UI'da
+// göstermek istiyoruz (kısmi degradation). Hata bilgisi client'a iletiliyor
+// ki kullanıcı toast ile haberdar olsun.
 
 import { getUserWorkspace } from "./auth";
 import { getCategories } from "./categories";
@@ -22,22 +26,40 @@ export interface SettingsPageData {
   members: WorkspaceMember[];
   invitations: WorkspaceInvitation[];
   role: WorkspaceRole;
+  /** Herhangi bir alt sorgu fail olduysa kullanıcıya gösterilecek özet */
+  errors: string[];
+}
+
+function valueOr<T>(
+  result: PromiseSettledResult<T>,
+  fallback: T,
+  label: string,
+  errors: string[]
+): T {
+  if (result.status === "fulfilled") return result.value;
+  const msg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+  console.error(`[getSettingsPageData] ${label} failed:`, msg);
+  errors.push(label);
+  return fallback;
 }
 
 export async function getSettingsPageData(): Promise<SettingsPageData> {
-  const [workspace, categories, members, invitations, role] = await Promise.all([
-    getUserWorkspace().catch(() => null),
-    getCategories().catch(() => [] as Category[]),
-    getTeamMembers().catch(() => [] as WorkspaceMember[]),
-    getPendingInvitations().catch(() => [] as WorkspaceInvitation[]),
-    getUserRole().catch(() => "viewer" as WorkspaceRole),
+  const [wsRes, catsRes, memsRes, invsRes, roleRes] = await Promise.allSettled([
+    getUserWorkspace(),
+    getCategories(),
+    getTeamMembers(),
+    getPendingInvitations(),
+    getUserRole(),
   ]);
 
+  const errors: string[] = [];
+
   return {
-    workspace: workspace as Workspace | null,
-    categories,
-    members,
-    invitations,
-    role,
+    workspace: valueOr(wsRes, null, "workspace", errors) as Workspace | null,
+    categories: valueOr(catsRes, [] as Category[], "categories", errors),
+    members: valueOr(memsRes, [] as WorkspaceMember[], "members", errors),
+    invitations: valueOr(invsRes, [] as WorkspaceInvitation[], "invitations", errors),
+    role: valueOr(roleRes, "viewer" as WorkspaceRole, "role", errors),
+    errors,
   };
 }

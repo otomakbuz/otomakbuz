@@ -14,7 +14,8 @@ export async function getCategories() {
     .order("name");
 
   if (error) {
-    // Oturum yoksa boş liste dön (RLS 0 satır döndürür, ama güvenli taraf)
+    // Silent fail yerine logla — DB/RLS sorunlarını sessizce yutma
+    console.error("[getCategories] DB/RLS error:", error.message);
     return [] as Category[];
   }
   return (data || []) as Category[];
