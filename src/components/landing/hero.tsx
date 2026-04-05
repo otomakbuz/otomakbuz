@@ -17,7 +17,7 @@ export function Hero() {
       {/* Sol tarafta taranan belge animasyonu */}
       <ScanningDocument />
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-20 sm:pt-32 pb-0">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10 sm:pt-14 pb-0">
         <div className="text-center max-w-3xl mx-auto">
           {/* Announcement pill */}
           <div className="animate-fade-up">
@@ -28,7 +28,7 @@ export function Hero() {
           </div>
 
           {/* Spacer */}
-          <div className="h-8" />
+          <div className="h-5" />
 
           {/* H1 */}
           <h1 className="animate-fade-up animate-fade-up-delay-1 text-[40px] sm:text-[52px] lg:text-[62px] font-bold tracking-tight text-ink leading-[1.05] mb-6">
@@ -43,7 +43,7 @@ export function Hero() {
           </p>
 
           {/* CTAs */}
-          <div className="animate-fade-up animate-fade-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center mb-16">
+          <div className="animate-fade-up animate-fade-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center mb-10">
             <Link href="/kayit">
               <Button
                 size="lg"
