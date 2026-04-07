@@ -16,6 +16,51 @@ export interface CompanyInfo {
   company_email: string | null;
 }
 
+// ─── Muhasebe ───
+
+export type AccountType = "asset" | "liability" | "equity" | "expense" | "income";
+
+export interface Account {
+  id: string;
+  workspace_id: string;
+  code: string;
+  name: string;
+  account_type: AccountType;
+  parent_code: string | null;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface JournalEntry {
+  id: string;
+  workspace_id: string;
+  entry_number: number;
+  entry_date: string;
+  description: string | null;
+  is_posted: boolean;
+  created_by: string;
+  created_at: string;
+}
+
+export interface JournalLine {
+  id: string;
+  journal_entry_id: string;
+  account_code: string;
+  debit_amount: number;
+  credit_amount: number;
+  description: string | null;
+  document_id: string | null;
+}
+
+export interface TrialBalanceRow {
+  code: string;
+  name: string;
+  account_type: AccountType;
+  total_debit: number;
+  total_credit: number;
+  balance: number;
+}
+
 /**
  * Türk vergi mevzuatına göre belge türleri (VUK 229-234).
  * MVP: fatura, perakende_fis, serbest_meslek_makbuzu, gider_pusulasi

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck } from "lucide-react";
+import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mainNav = [
@@ -14,6 +14,7 @@ const mainNav = [
   { href: "/cari", label: "Cari Hesap", icon: Scale },
   { href: "/raporlar", label: "Raporlar", icon: BarChart3 },
   { href: "/e-fatura", label: "E-Fatura", icon: FileCheck },
+  { href: "/muhasebe", label: "Muhasebe", icon: BookOpen },
 ];
 
 const bottomNav = [
