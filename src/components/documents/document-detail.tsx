@@ -8,8 +8,9 @@ import { ReviewForm } from "@/components/upload/review-form";
 import { StatusBadge } from "./status-badge";
 import { deleteDocument } from "@/lib/actions/documents";
 import { generateEFaturaXml } from "@/lib/actions/e-fatura";
+import { getInvoiceData } from "@/lib/actions/invoices";
 import { toast } from "sonner";
-import { Trash2, ArrowLeft, FileText, Clock, FileCheck } from "lucide-react";
+import { Trash2, ArrowLeft, FileText, Clock, FileCheck, FileDown } from "lucide-react";
 import type { Document, Category, AuditLog } from "@/types";
 import { formatDate } from "@/lib/utils";
 
@@ -66,6 +67,31 @@ export function DocumentDetail({ document: doc, categories, auditLogs }: Documen
               }}
             >
               <FileCheck className="h-4 w-4 mr-1" />E-Fatura XML
+            </Button>
+          )}
+          {doc.status === "verified" && (
+            <Button
+              size="sm" variant="outline"
+              className="border-receipt-gold text-receipt-brown hover:bg-receipt-gold/10"
+              onClick={async () => {
+                try {
+                  const { document: fullDoc, company } = await getInvoiceData(doc.id);
+                  const { generateInvoicePdf } = await import("@/lib/invoices/pdf-generator");
+                  const blob = await generateInvoicePdf(fullDoc, company);
+                  const url = URL.createObjectURL(blob);
+                  const a = Object.assign(document.createElement("a"), {
+                    href: url,
+                    download: `fatura_${doc.document_number || doc.id.slice(0, 8)}.pdf`,
+                  });
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("Fatura PDF indirildi");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "PDF oluşturulamadı");
+                }
+              }}
+            >
+              <FileDown className="h-4 w-4 mr-1" />PDF İndir
             </Button>
           )}
           <Button variant="destructive" size="sm" onClick={handleDelete}

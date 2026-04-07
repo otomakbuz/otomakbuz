@@ -3,7 +3,8 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUserWorkspace, getUser } from "./auth";
 import { DEFAULT_CHART_OF_ACCOUNTS } from "@/lib/accounting/chart-of-accounts";
-import type { Account, JournalEntry, JournalLine, TrialBalanceRow } from "@/types";
+import { generateXbrlGlXml } from "@/lib/e-defter/xbrl-gl";
+import type { Account, JournalEntry, JournalLine, TrialBalanceRow, CompanyInfo } from "@/types";
 
 // ─── Hesap Planı ───
 
@@ -144,4 +145,52 @@ export async function getTrialBalance(date?: string): Promise<TrialBalanceRow[]>
   });
   if (error) throw new Error(error.message);
   return (data || []) as TrialBalanceRow[];
+}
+
+// ─── E-Defter Export ───
+
+export async function exportEDefter(month: number, year: number): Promise<{ xml: string; filename: string }> {
+  const supabase = await createClient();
+  const workspace = await getUserWorkspace();
+  if (!workspace) throw new Error("Oturum açılmamış");
+
+  // Firma bilgilerini al
+  const { data: companyData } = await supabase
+    .from("workspaces")
+    .select("name, company_tax_id, company_tax_office, company_address, company_phone, company_email")
+    .eq("id", workspace.id)
+    .single();
+  const company = companyData as CompanyInfo & { name: string };
+
+  if (!company?.company_tax_id) {
+    throw new Error("E-Defter için firma VKN bilgisi gerekli. Ayarlar > E-Fatura sekmesinden girin.");
+  }
+
+  // Dönemin onaylanmış yevmiye kayıtlarını al
+  const startDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const endDate = month === 12
+    ? `${year + 1}-01-01`
+    : `${year}-${String(month + 1).padStart(2, "0")}-01`;
+
+  const { data: entries, error } = await supabase
+    .from("journal_entries")
+    .select("*, lines:journal_lines(*)")
+    .eq("is_posted", true)
+    .gte("entry_date", startDate)
+    .lt("entry_date", endDate)
+    .order("entry_number");
+
+  if (error) throw new Error(error.message);
+  if (!entries || entries.length === 0) {
+    throw new Error("Bu dönemde onaylanmış yevmiye kaydı bulunamadı.");
+  }
+
+  const xml = generateXbrlGlXml(
+    entries as (JournalEntry & { lines: JournalLine[] })[],
+    company,
+    { month, year }
+  );
+
+  const filename = `e-defter_${year}-${String(month).padStart(2, "0")}.xml`;
+  return { xml, filename };
 }
