@@ -2,12 +2,15 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { BarChart3, Building2, PieChart, TrendingUp, Calendar } from "lucide-react";
+import { BarChart3, Building2, PieChart, TrendingUp, Calendar, Receipt, FileText, Scale } from "lucide-react";
 import { MonthlyTrendChart } from "./monthly-trend-chart";
 import { SupplierRankingChart } from "./supplier-ranking-chart";
 import { CategoryBreakdownChart } from "./category-breakdown-chart";
 import { CashflowProjectionChart } from "./cashflow-projection-chart";
 import { YearlySummaryTable } from "./yearly-summary-table";
+import { VatSummaryReport } from "./vat-summary";
+import { IncomeStatement } from "./income-statement";
+import { BalanceSheet } from "./balance-sheet";
 import type {
   MonthlyTrend,
   SupplierRanking,
@@ -22,6 +25,9 @@ const tabs = [
   { id: "categories", label: "Kategoriler", icon: PieChart },
   { id: "cashflow", label: "Nakit Akış", icon: TrendingUp },
   { id: "yearly", label: "Yıllık", icon: Calendar },
+  { id: "kdv", label: "KDV", icon: Receipt },
+  { id: "gelir", label: "Gelir Tablosu", icon: FileText },
+  { id: "bilanco", label: "Bilanço", icon: Scale },
 ] as const;
 
 type TabId = (typeof tabs)[number]["id"];
@@ -108,6 +114,30 @@ export function ReportTabs({
               <h3 className="text-sm font-semibold text-ink mb-1">Yıllık Özet</h3>
               <p className="text-xs text-ink-faint mb-4">Yıl bazlı toplam gelir, gider ve net durum</p>
               <YearlySummaryTable data={yearlySummary} />
+            </div>
+          )}
+
+          {activeTab === "kdv" && (
+            <div>
+              <h3 className="text-sm font-semibold text-ink mb-1">KDV Beyanname Özeti</h3>
+              <p className="text-xs text-ink-faint mb-4">Aylık KDV hesaplama: Hesaplanan KDV - İndirilecek KDV</p>
+              <VatSummaryReport />
+            </div>
+          )}
+
+          {activeTab === "gelir" && (
+            <div>
+              <h3 className="text-sm font-semibold text-ink mb-1">Gelir Tablosu</h3>
+              <p className="text-xs text-ink-faint mb-4">Dönem gelir, gider ve net kâr/zarar</p>
+              <IncomeStatement />
+            </div>
+          )}
+
+          {activeTab === "bilanco" && (
+            <div>
+              <h3 className="text-sm font-semibold text-ink mb-1">Bilanço</h3>
+              <p className="text-xs text-ink-faint mb-4">Varlık ve kaynak dağılımı (hesap planı bazlı)</p>
+              <BalanceSheet />
             </div>
           )}
         </div>

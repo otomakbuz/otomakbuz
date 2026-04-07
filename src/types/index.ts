@@ -61,6 +61,55 @@ export interface TrialBalanceRow {
   balance: number;
 }
 
+// ─── Stok Yönetimi ───
+
+export type MovementType = "purchase" | "sale" | "adjustment" | "return";
+
+export interface Product {
+  id: string;
+  workspace_id: string;
+  code: string;
+  name: string;
+  unit: string;
+  current_quantity: number;
+  reorder_level: number;
+  unit_cost: number;
+  unit_price: number;
+  category: string | null;
+  supplier_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StockMovement {
+  id: string;
+  workspace_id: string;
+  product_id: string;
+  movement_type: MovementType;
+  quantity: number;
+  unit_cost: number | null;
+  reference_note: string | null;
+  document_id: string | null;
+  movement_date: string;
+  created_at: string;
+  product?: Product;
+}
+
+export interface InventorySummaryRow {
+  id: string;
+  code: string;
+  name: string;
+  unit: string;
+  current_quantity: number;
+  unit_cost: number;
+  unit_price: number;
+  reorder_level: number;
+  category: string | null;
+  stock_value: number;
+  below_reorder: boolean;
+}
+
 /**
  * Türk vergi mevzuatına göre belge türleri (VUK 229-234).
  * MVP: fatura, perakende_fis, serbest_meslek_makbuzu, gider_pusulasi
@@ -419,4 +468,35 @@ export interface YearlySummary {
   income: number;
   net: number;
   document_count: number;
+}
+
+// ─── Finansal Raporlar ───
+
+export interface VatSummary {
+  month: number;
+  year: number;
+  salesVat: number;
+  purchaseVat: number;
+  netPayable: number;
+  documentCount: number;
+  byRate: { rate: number; base: number; vat: number; count: number }[];
+}
+
+export interface IncomeStatementData {
+  totalIncome: number;
+  totalExpense: number;
+  grossProfit: number;
+  totalVat: number;
+  netProfit: number;
+  expenseBreakdown: { category: string; amount: number }[];
+}
+
+export interface BalanceSheetData {
+  assets: { code: string; name: string; balance: number }[];
+  liabilities: { code: string; name: string; balance: number }[];
+  equity: { code: string; name: string; balance: number }[];
+  totalAssets: number;
+  totalLiabilities: number;
+  totalEquity: number;
+  isBalanced: boolean;
 }
