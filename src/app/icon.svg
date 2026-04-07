@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <rect width="32" height="32" rx="7" fill="#4A3728"/>
+  <!-- M bars -->
+  <rect x="5" y="4" width="4" height="24" rx="0.5" fill="rgba(255,255,255,0.5)"/>
+  <rect x="23" y="4" width="4" height="24" rx="0.5" fill="rgba(255,255,255,0.5)"/>
+  <polygon points="9,9 16,19 23,9" fill="rgba(255,255,255,0.4)"/>
+  <polygon points="9,19 16,19 16,28 9,28" fill="rgba(255,255,255,0.5)"/>
+  <polygon points="23,19 16,19 16,28 23,28" fill="rgba(255,255,255,0.4)"/>
+  <!-- O ring -->
+  <circle cx="15" cy="18" r="10" fill="rgba(255,255,255,0.85)"/>
+  <circle cx="15" cy="18" r="6.5" fill="#4A3728"/>
+  <!-- M inside O hole -->
+  <rect x="5" y="13" width="4" height="10" fill="rgba(255,255,255,0.5)"/>
+  <polygon points="9,13 15,20 15,24 9,24" fill="rgba(255,255,255,0.5)"/>
+  <polygon points="21,13 15,20 15,24 21,24" fill="rgba(255,255,255,0.4)"/>
+</svg>

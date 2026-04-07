@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- M left bar -->
+  <rect x="18" y="12" width="12" height="76" rx="1" fill="rgba(255,255,255,0.5)"/>
+  <!-- M right bar -->
+  <rect x="70" y="12" width="12" height="76" rx="1" fill="rgba(255,255,255,0.5)"/>
+  <!-- M left diagonal -->
+  <polygon points="30,30 50,60 50,88 30,88" fill="rgba(255,255,255,0.5)"/>
+  <!-- M right diagonal -->
+  <polygon points="70,30 50,60 50,88 70,88" fill="rgba(255,255,255,0.4)"/>
+  <!-- M top peak -->
+  <polygon points="30,12 50,42 70,12" fill="rgba(255,255,255,0.4)"/>
+
+  <!-- O ring -->
+  <circle cx="47" cy="55" r="32" fill="rgba(255,255,255,0.85)"/>
+  <circle cx="47" cy="55" r="20" fill="#4A3728"/>
+
+  <!-- M parts visible inside the dark O center -->
+  <rect x="18" y="40" width="12" height="30" rx="1" fill="rgba(255,255,255,0.5)"/>
+  <polygon points="30,40 47,62 47,72 30,72" fill="rgba(255,255,255,0.5)"/>
+  <polygon points="64,40 47,62 47,72 64,72" fill="rgba(255,255,255,0.4)"/>
+</svg>

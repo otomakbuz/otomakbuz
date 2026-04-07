@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <!-- M left bar -->
+  <rect x="18" y="12" width="12" height="76" rx="1" fill="#7A6652"/>
+  <!-- M right bar -->
+  <rect x="70" y="12" width="12" height="76" rx="1" fill="#7A6652"/>
+  <!-- M left diagonal -->
+  <polygon points="30,30 50,60 50,88 30,88" fill="#7A6652"/>
+  <!-- M right diagonal -->
+  <polygon points="70,30 50,60 50,88 70,88" fill="#6B5744"/>
+  <!-- M top peak -->
+  <polygon points="30,12 50,42 70,12" fill="#6B5744"/>
+
+  <!-- O ring - cream donut shape using two circles -->
+  <circle cx="47" cy="55" r="32" fill="#EDD9B8"/>
+  <circle cx="47" cy="55" r="20" fill="#4A3728"/>
+
+  <!-- M parts visible inside the dark O center -->
+  <!-- Left bar through center -->
+  <rect x="18" y="40" width="12" height="30" rx="1" fill="#7A6652" opacity="0.9"/>
+  <!-- Left diagonal through center -->
+  <polygon points="30,40 47,62 47,72 30,72" fill="#7A6652" opacity="0.9"/>
+  <!-- Right diagonal through center -->
+  <polygon points="64,40 47,62 47,72 64,72" fill="#6B5744" opacity="0.9"/>
+</svg>

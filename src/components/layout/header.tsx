@@ -68,9 +68,7 @@ export function Header() {
           <SheetContent side="left" className="w-[280px] p-0 receipt-sidebar border-none">
             <div className="px-5 py-5">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-                <div className="w-9 h-9 rounded bg-white/15 flex items-center justify-center">
-                  <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={24} height={24} className="rounded" style={{ width: 24, height: 24 }} />
-                </div>
+                <Image src="/logo-white.svg" alt="Otomakbuz" width={36} height={36} className="flex-shrink-0" />
                 <span className="font-bold text-lg tracking-tight text-white">
                   Otomakbuz
                 </span>
@@ -98,7 +96,7 @@ export function Header() {
         {/* Mobile logo */}
         <div className="md:hidden">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={28} height={28} className="rounded" style={{ width: 28, height: 28 }} />
+            <Image src="/logo-icon.svg" alt="Otomakbuz" width={28} height={28} />
             <span className="font-bold text-base tracking-tight">
               <span className="text-brand">Oto</span>
               <span className="text-receipt-brown">makbuz</span>
