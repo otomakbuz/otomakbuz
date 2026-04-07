@@ -26,7 +26,7 @@ export function ReportSummary({ documents }: { documents: Document[] }) {
   return (
     <div className="space-y-6">
       {/* Top-level stats */}
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="receipt-card rounded p-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-9 h-9 rounded-xl bg-brand-50 flex items-center justify-center">
@@ -57,7 +57,7 @@ export function ReportSummary({ documents }: { documents: Document[] }) {
       </div>
 
       {/* Detail cards */}
-      <div className="grid lg:grid-cols-2 gap-6">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
         <div className="receipt-card rounded">
           <div className="px-6 py-4 border-b border-paper-lines">
             <h3 className="font-semibold text-ink">Kategori Bazlı</h3>

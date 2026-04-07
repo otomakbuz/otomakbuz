@@ -500,3 +500,75 @@ export interface BalanceSheetData {
   totalEquity: number;
   isBalanced: boolean;
 }
+
+// ─── Banka Mutabakat ───
+
+export type BankMatchStatus = "unmatched" | "matched" | "manual" | "ignored";
+
+export interface BankAccount {
+  id: string;
+  workspace_id: string;
+  bank_name: string;
+  account_name: string;
+  iban: string | null;
+  currency: string;
+  current_balance: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BankTransaction {
+  id: string;
+  workspace_id: string;
+  bank_account_id: string;
+  transaction_date: string;
+  value_date: string | null;
+  description: string;
+  amount: number;
+  balance_after: number | null;
+  reference_no: string | null;
+  matched_document_id: string | null;
+  match_confidence: number | null;
+  match_status: BankMatchStatus;
+  created_at: string;
+  // Joined
+  document?: Document;
+}
+
+export interface BankStatementRow {
+  transaction_date: string;
+  value_date?: string;
+  description: string;
+  amount: number;
+  balance_after?: number;
+  reference_no?: string;
+}
+
+export interface BankSummary {
+  total: number;
+  matched: number;
+  unmatched: number;
+  ignored: number;
+  manual: number;
+}
+
+// ─── İçe/Dışa Aktarma ───
+
+export type ExportFormat = "csv" | "excel";
+
+export interface ImportError {
+  row: number;
+  field: string;
+  message: string;
+}
+
+export interface ImportRow {
+  [key: string]: string | number | null;
+}
+
+export interface ImportResult {
+  imported: number;
+  skipped: number;
+  errors: string[];
+}

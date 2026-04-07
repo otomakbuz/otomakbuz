@@ -30,11 +30,11 @@ export function VatSummaryReport() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
-        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm flex-1 sm:flex-none">
           {MONTH_NAMES.slice(1).map((name, i) => <option key={i} value={i + 1}>{name}</option>)}
         </select>
-        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm">
+        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm flex-1 sm:flex-none">
           {[2024, 2025, 2026, 2027].map((y) => <option key={y} value={y}>{y}</option>)}
         </select>
         <button onClick={load} className="text-sm text-receipt-brown hover:underline font-medium">Getir</button>
@@ -47,7 +47,7 @@ export function VatSummaryReport() {
       ) : (
         <>
           {/* Özet kartları */}
-          <div className="grid sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             <div className="p-4 rounded border border-paper-lines">
               <p className="text-xs text-ink-muted font-medium">Hesaplanan KDV (Satış)</p>
               <p className="text-lg font-bold text-emerald-700 mt-1">{formatCurrency(data.salesVat)}</p>
@@ -65,7 +65,7 @@ export function VatSummaryReport() {
           </div>
 
           {/* KDV oranlarına göre detay */}
-          <div className="rounded border border-paper-lines overflow-hidden">
+          <div className="rounded border border-paper-lines overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-surface/50 border-b border-paper-lines">

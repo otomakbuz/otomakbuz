@@ -16,10 +16,10 @@ const OPENROUTER_HEADERS = {
  * Sıralama: hız + doğruluk + rate-limit toleransı. Önce en güvenilir.
  */
 const OPENROUTER_FALLBACK_POOL = [
-  "google/gemini-2.0-flash-exp:free",
-  "meta-llama/llama-3.2-11b-vision-instruct:free",
-  "qwen/qwen-2.5-vl-72b-instruct:free",
-  "meta-llama/llama-3.2-90b-vision-instruct:free",
+  "google/gemini-2.0-flash-001",
+  "google/gemini-2.5-flash-preview",
+  "qwen/qwen2.5-vl-72b-instruct",
+  "meta-llama/llama-4-scout:free",
 ];
 
 /**
@@ -59,7 +59,7 @@ export async function getOcrAdapter(workspaceId?: string): Promise<OcrAdapter> {
         }
 
         if (provider === "openrouter") {
-          const primary = (data.ocr_model as string) || "google/gemini-2.0-flash-exp:free";
+          const primary = (data.ocr_model as string) || "google/gemini-2.0-flash-001";
           const chain = buildChain(primary, OPENROUTER_FALLBACK_POOL);
           const entries: FallbackEntry[] = chain.map((model) => ({
             label: `OpenRouter ${model}`,

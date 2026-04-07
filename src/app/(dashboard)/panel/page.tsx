@@ -23,13 +23,13 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-ink tracking-tight">Panel</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-ink tracking-tight">Panel</h1>
           <p className="text-ink-muted text-sm mt-1">Bu ayki özet ve son belgeler.</p>
         </div>
         <Link href="/yukle"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded bg-receipt-brown text-white text-sm font-medium hover:bg-receipt-brown-dark transition-colors shadow-sm">
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded bg-receipt-brown text-white text-sm font-medium hover:bg-receipt-brown-dark transition-colors shadow-sm w-full sm:w-auto">
           <FileText className="h-4 w-4" />
           Yeni Belge Yükle
           <ArrowRight className="h-3.5 w-3.5" />
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
         <StatCard title="Bu Ay Belge" value={stats.documents_this_month} icon={FileText} description="Yüklenen belge sayısı" />
         <StatCard title="Bu Ay Gider" value={formatCurrency(stats.total_expense_this_month)} icon={TrendingDown} description="Toplam harcama" />
         <StatCard title="Bu Ay Gelir" value={formatCurrency(stats.total_income_this_month)} icon={TrendingUp} description="Toplam gelir" />
@@ -45,17 +45,19 @@ export default async function DashboardPage() {
       </div>
 
       {/* Trend chart */}
-      <div className="receipt-card rounded p-4">
-        <h2 className="text-base font-semibold text-ink mb-3">Aylık Gelir / Gider Trendi</h2>
-        <MonthlyTrendMini data={monthlyTrends} />
+      <div className="receipt-card rounded p-3 sm:p-4">
+        <h2 className="text-sm sm:text-base font-semibold text-ink mb-3">Aylık Gelir / Gider Trendi</h2>
+        <div className="min-h-[180px]">
+          <MonthlyTrendMini data={monthlyTrends} />
+        </div>
       </div>
 
       {/* Charts row */}
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="flex flex-col lg:flex-row gap-6">
+        <div className="lg:flex-[2] min-w-0">
           <RecentDocuments documents={stats.recent_documents} />
         </div>
-        <div className="space-y-6">
+        <div className="lg:flex-1 space-y-6">
           <IncomeExpenseCard
             income={stats.total_income_this_month}
             expense={stats.total_expense_this_month}

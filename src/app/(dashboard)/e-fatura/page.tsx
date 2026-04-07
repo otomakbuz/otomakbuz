@@ -32,39 +32,60 @@ export default async function EFaturaPage() {
         </div>
       ) : (
         <div className="receipt-card rounded overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-paper-lines bg-surface/50">
-                <th className="text-left px-4 py-3 font-medium text-ink-muted">Tarih</th>
-                <th className="text-left px-4 py-3 font-medium text-ink-muted">Firma</th>
-                <th className="text-left px-4 py-3 font-medium text-ink-muted">Belge No</th>
-                <th className="text-right px-4 py-3 font-medium text-ink-muted">Tutar</th>
-                <th className="text-center px-4 py-3 font-medium text-ink-muted">E-Fatura Durumu</th>
-                <th className="text-right px-4 py-3 font-medium text-ink-muted"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {docs.map((doc) => (
-                <tr key={doc.id} className="border-b border-paper-lines last:border-0 hover:bg-surface/30 transition-colors">
-                  <td className="px-4 py-3 text-ink">{doc.issue_date ? formatDate(doc.issue_date) : "-"}</td>
-                  <td className="px-4 py-3 text-ink font-medium">{doc.supplier_name || "Bilinmiyor"}</td>
-                  <td className="px-4 py-3 text-ink-muted font-mono text-xs">{doc.document_number || "-"}</td>
-                  <td className="px-4 py-3 text-right text-ink">{doc.total_amount != null ? formatCurrency(doc.total_amount, doc.currency) : "-"}</td>
-                  <td className="px-4 py-3 text-center">
-                    <EInvoiceStatusBadge status={doc.e_invoice_status} />
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      href={`/belge/${doc.id}`}
-                      className="text-xs text-receipt-brown hover:underline font-medium"
-                    >
-                      Görüntüle
-                    </Link>
-                  </td>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-paper-lines bg-surface/50">
+                  <th className="text-left px-4 py-3 font-medium text-ink-muted">Tarih</th>
+                  <th className="text-left px-4 py-3 font-medium text-ink-muted">Firma</th>
+                  <th className="text-left px-4 py-3 font-medium text-ink-muted hidden md:table-cell">Belge No</th>
+                  <th className="text-right px-4 py-3 font-medium text-ink-muted">Tutar</th>
+                  <th className="text-center px-4 py-3 font-medium text-ink-muted">Durum</th>
+                  <th className="text-right px-4 py-3 font-medium text-ink-muted"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {docs.map((doc) => (
+                  <tr key={doc.id} className="border-b border-paper-lines last:border-0 hover:bg-surface/30 transition-colors">
+                    <td className="px-4 py-3 text-ink">{doc.issue_date ? formatDate(doc.issue_date) : "-"}</td>
+                    <td className="px-4 py-3 text-ink font-medium">{doc.supplier_name || "Bilinmiyor"}</td>
+                    <td className="px-4 py-3 text-ink-muted font-mono text-xs hidden md:table-cell">{doc.document_number || "-"}</td>
+                    <td className="px-4 py-3 text-right text-ink">{doc.total_amount != null ? formatCurrency(doc.total_amount, doc.currency) : "-"}</td>
+                    <td className="px-4 py-3 text-center">
+                      <EInvoiceStatusBadge status={doc.e_invoice_status} />
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link
+                        href={`/belge/${doc.id}`}
+                        className="text-xs text-receipt-brown hover:underline font-medium"
+                      >
+                        Görüntüle
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card layout */}
+          <div className="sm:hidden divide-y divide-paper-lines">
+            {docs.map((doc) => (
+              <Link key={doc.id} href={`/belge/${doc.id}`} className="block p-3 hover:bg-surface/30 transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-ink truncate">{doc.supplier_name || "Bilinmiyor"}</span>
+                  <span className="text-sm font-semibold text-ink whitespace-nowrap ml-2">
+                    {doc.total_amount != null ? formatCurrency(doc.total_amount, doc.currency) : "-"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-ink-muted">
+                  {doc.issue_date && <span>{formatDate(doc.issue_date)}</span>}
+                  <EInvoiceStatusBadge status={doc.e_invoice_status} />
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 

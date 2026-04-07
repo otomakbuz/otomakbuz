@@ -29,15 +29,15 @@ export function IncomeStatement() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
         <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)}
-          className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm" placeholder="Başlangıç" />
+          className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm flex-1 sm:flex-none" placeholder="Başlangıç" />
         <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)}
-          className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm" placeholder="Bitiş" />
+          className="h-9 px-3 rounded border border-paper-lines bg-paper text-sm flex-1 sm:flex-none" placeholder="Bitiş" />
         <button onClick={load} className="text-sm text-receipt-brown hover:underline font-medium">Filtrele</button>
       </div>
 
-      <div className="rounded border border-paper-lines overflow-hidden">
+      <div className="rounded border border-paper-lines overflow-x-auto">
         <table className="w-full text-sm">
           <tbody>
             {/* Gelirler */}

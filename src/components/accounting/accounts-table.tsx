@@ -103,40 +103,42 @@ export function AccountsTable() {
       </div>
 
       {showAdd && (
-        <div className="flex items-end gap-2 p-3 rounded border border-paper-lines bg-surface/50">
-          <div>
-            <label className="text-xs text-ink-muted font-medium">Kod</label>
-            <Input value={newCode} onChange={(e) => setNewCode(e.target.value)} placeholder="101" className="h-8 w-20 border-paper-lines" />
+        <div className="p-3 rounded border border-paper-lines bg-surface/50 space-y-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 items-end">
+            <div>
+              <label className="text-xs text-ink-muted font-medium">Kod</label>
+              <Input value={newCode} onChange={(e) => setNewCode(e.target.value)} placeholder="101" className="h-8 border-paper-lines" />
+            </div>
+            <div className="col-span-2 sm:col-span-1 sm:flex-1">
+              <label className="text-xs text-ink-muted font-medium">Hesap Adı</label>
+              <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Alınan Çekler" className="h-8 border-paper-lines" />
+            </div>
+            <div>
+              <label className="text-xs text-ink-muted font-medium">Tür</label>
+              <select value={newType} onChange={(e) => setNewType(e.target.value)} className="w-full h-8 px-2 rounded border border-paper-lines bg-paper text-sm">
+                {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+            </div>
           </div>
-          <div className="flex-1">
-            <label className="text-xs text-ink-muted font-medium">Hesap Adı</label>
-            <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Alınan Çekler" className="h-8 border-paper-lines" />
-          </div>
-          <div>
-            <label className="text-xs text-ink-muted font-medium">Tür</label>
-            <select value={newType} onChange={(e) => setNewType(e.target.value)} className="h-8 px-2 rounded border border-paper-lines bg-paper text-sm">
-              {Object.entries(TYPE_LABELS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-            </select>
-          </div>
-          <Button size="sm" onClick={handleAdd} disabled={isPending} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white h-8">Ekle</Button>
+          <Button size="sm" onClick={handleAdd} disabled={isPending} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white h-8 w-full sm:w-auto">Ekle</Button>
         </div>
       )}
 
-      <div className="rounded border border-paper-lines overflow-hidden">
+      <div className="rounded border border-paper-lines overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="bg-surface/50 border-b border-paper-lines">
-              <th className="text-left px-4 py-2.5 font-medium text-ink-muted w-24">Kod</th>
-              <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Hesap Adı</th>
-              <th className="text-left px-4 py-2.5 font-medium text-ink-muted w-32">Tür</th>
+              <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-20 sm:w-24">Kod</th>
+              <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Hesap Adı</th>
+              <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-32 hidden sm:table-cell">Tür</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((acc) => (
               <tr key={acc.id} className="border-b border-paper-lines last:border-0 hover:bg-surface/30">
-                <td className="px-4 py-2 font-mono text-xs text-ink font-semibold">{acc.code}</td>
-                <td className="px-4 py-2 text-ink">{acc.name}</td>
-                <td className="px-4 py-2">
+                <td className="px-3 sm:px-4 py-2 font-mono text-xs text-ink font-semibold">{acc.code}</td>
+                <td className="px-3 sm:px-4 py-2 text-ink">{acc.name}</td>
+                <td className="px-3 sm:px-4 py-2 hidden sm:table-cell">
                   <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[acc.account_type] || ""}`}>
                     {TYPE_LABELS[acc.account_type] || acc.account_type}
                   </span>

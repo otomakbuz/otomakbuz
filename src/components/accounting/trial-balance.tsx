@@ -60,27 +60,27 @@ export function TrialBalance() {
           <p className="text-ink-faint text-xs mt-1">Yevmiye kayıtları onaylandığında mizan otomatik oluşur.</p>
         </div>
       ) : (
-        <div className="rounded border border-paper-lines overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="rounded border border-paper-lines overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead>
               <tr className="bg-surface/50 border-b border-paper-lines">
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted w-20">Kod</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Hesap Adı</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted w-24">Tür</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted w-32">Borç</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted w-32">Alacak</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted w-32">Bakiye</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-16 sm:w-20">Kod</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Hesap Adı</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-20 sm:w-24 hidden sm:table-cell">Tür</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-24 sm:w-32">Borç</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-24 sm:w-32">Alacak</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted w-24 sm:w-32">Bakiye</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
                 <tr key={row.code} className="border-b border-paper-lines last:border-0 hover:bg-surface/30">
-                  <td className="px-4 py-2 font-mono text-xs font-semibold text-ink">{row.code}</td>
-                  <td className="px-4 py-2 text-ink">{row.name}</td>
-                  <td className="px-4 py-2 text-xs text-ink-muted">{TYPE_LABELS[row.account_type] || row.account_type}</td>
-                  <td className="px-4 py-2 text-right font-mono text-ink">{formatCurrency(Number(row.total_debit))}</td>
-                  <td className="px-4 py-2 text-right font-mono text-ink">{formatCurrency(Number(row.total_credit))}</td>
-                  <td className={`px-4 py-2 text-right font-mono font-medium ${Number(row.balance) >= 0 ? "text-ink" : "text-red-600"}`}>
+                  <td className="px-3 sm:px-4 py-2 font-mono text-xs font-semibold text-ink">{row.code}</td>
+                  <td className="px-3 sm:px-4 py-2 text-ink">{row.name}</td>
+                  <td className="px-3 sm:px-4 py-2 text-xs text-ink-muted hidden sm:table-cell">{TYPE_LABELS[row.account_type] || row.account_type}</td>
+                  <td className="px-3 sm:px-4 py-2 text-right font-mono text-ink">{formatCurrency(Number(row.total_debit))}</td>
+                  <td className="px-3 sm:px-4 py-2 text-right font-mono text-ink">{formatCurrency(Number(row.total_credit))}</td>
+                  <td className={`px-3 sm:px-4 py-2 text-right font-mono font-medium ${Number(row.balance) >= 0 ? "text-ink" : "text-red-600"}`}>
                     {formatCurrency(Math.abs(Number(row.balance)))}
                     {Number(row.balance) < 0 ? " (A)" : Number(row.balance) > 0 ? " (B)" : ""}
                   </td>

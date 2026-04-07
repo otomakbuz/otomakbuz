@@ -58,8 +58,8 @@ export function BalancesTable({ balances }: BalancesTableProps) {
         </div>
       </div>
 
-      {/* Firma listesi */}
-      <div className="receipt-card rounded overflow-hidden">
+      {/* Firma listesi - Desktop */}
+      <div className="receipt-card rounded overflow-hidden hidden md:block">
         <div className="px-5 py-3.5 border-b border-paper-lines">
           <div className="grid grid-cols-12 gap-4 text-xs font-medium text-ink-muted">
             <div className="col-span-4">Firma</div>
@@ -110,6 +110,44 @@ export function BalancesTable({ balances }: BalancesTableProps) {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Firma listesi - Mobile card layout */}
+      <div className="md:hidden space-y-2">
+        {balances.map((b) => (
+          <Link
+            key={b.contact_id}
+            href={`/cari/${b.contact_id}`}
+            className="receipt-card rounded p-3 block hover:border-receipt-gold/40 transition-colors"
+          >
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className="w-8 h-8 rounded bg-receipt-gold/10 flex items-center justify-center flex-shrink-0">
+                <Building2 className="h-4 w-4 text-receipt-brown" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium text-ink truncate">{b.company_name}</p>
+                <p className="text-xs text-ink-faint">{b.entry_count} hareket</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-ink-faint flex-shrink-0" />
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div>
+                <p className="text-[10px] text-ink-muted">Borc</p>
+                <p className="text-xs tabular-nums text-red-600 font-medium">{formatCurrency(b.total_debit)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-ink-muted">Alacak</p>
+                <p className="text-xs tabular-nums text-emerald-600 font-medium">{formatCurrency(b.total_credit)}</p>
+              </div>
+              <div>
+                <p className="text-[10px] text-ink-muted">Bakiye</p>
+                <p className={cn("text-xs font-semibold tabular-nums", b.balance >= 0 ? "text-emerald-600" : "text-red-600")}>
+                  {b.balance >= 0 ? "+" : ""}{formatCurrency(b.balance)}
+                </p>
+              </div>
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );

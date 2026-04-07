@@ -424,6 +424,9 @@ export default function Hero3DScene() {
         camera={{ position: [0, 0, 7], fov: 45 }}
         gl={{ antialias: true, alpha: true }}
         dpr={[1, 2]}
+        onCreated={({ gl }) => {
+          gl.shadowMap.type = THREE.PCFShadowMap;
+        }}
       >
         {/* Aydınlatma — sıcak, titanyumu öne çıkaran */}
         <ambientLight intensity={0.6} />

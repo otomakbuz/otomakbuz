@@ -337,3 +337,38 @@ html {
 .animate-scan-doc-dot-1 { animation: scan-doc-dot 1.2s ease-in-out infinite; }
 .animate-scan-doc-dot-2 { animation: scan-doc-dot 1.2s ease-in-out infinite 0.2s; }
 .animate-scan-doc-dot-3 { animation: scan-doc-dot 1.2s ease-in-out infinite 0.4s; }
+
+/* ── Mobile Responsive Utilities ── */
+@media (max-width: 640px) {
+  .receipt-card {
+    padding: 0.75rem;
+  }
+
+  .page-fold-enter {
+    animation: none;
+  }
+}
+
+/* Hide scrollbar for tab navigation on mobile */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Mobile-friendly table wrapper */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile card layout for table rows */
+@media (max-width: 768px) {
+  .mobile-card-layout .table-row-card {
+    display: block;
+    padding: 0.75rem;
+    border-bottom: 1px solid #E0D5C5;
+  }
+}

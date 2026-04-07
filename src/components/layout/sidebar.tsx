@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck, BookOpen, Package } from "lucide-react";
+import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mainNav = [
@@ -16,10 +16,12 @@ const mainNav = [
   { href: "/e-fatura", label: "E-Fatura", icon: FileCheck },
   { href: "/muhasebe", label: "Muhasebe", icon: BookOpen },
   { href: "/stok", label: "Stok", icon: Package },
+  { href: "/banka", label: "Banka", icon: Landmark },
 ];
 
 const bottomNav = [
   { href: "/hatirlaticilar", label: "Hatırlatıcılar", icon: Bell },
+  { href: "/veri", label: "Veri", icon: DatabaseZap },
   { href: "/ayarlar", label: "Ayarlar", icon: Settings },
 ];
 

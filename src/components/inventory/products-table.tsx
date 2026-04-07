@@ -61,7 +61,7 @@ export function ProductsTable() {
   return (
     <div className="p-4 space-y-4">
       {/* Özet */}
-      <div className="grid sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="p-3 rounded border border-paper-lines">
           <p className="text-xs text-ink-muted">Toplam Ürün</p>
           <p className="text-lg font-bold text-ink">{products.length}</p>
@@ -79,10 +79,10 @@ export function ProductsTable() {
       </div>
 
       {/* Arama + Ekle */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <Input value={search} onChange={(e) => setSearch(e.target.value)}
-          placeholder="Ürün ara..." className="h-9 border-paper-lines bg-paper max-w-xs" />
-        <Button size="sm" onClick={() => setShowForm(!showForm)} className="ml-auto bg-receipt-brown hover:bg-receipt-brown-dark text-white">
+          placeholder="Ürün ara..." className="h-9 border-paper-lines bg-paper sm:max-w-xs" />
+        <Button size="sm" onClick={() => setShowForm(!showForm)} className="sm:ml-auto bg-receipt-brown hover:bg-receipt-brown-dark text-white w-full sm:w-auto">
           <Plus className="h-3.5 w-3.5 mr-1" />Yeni Ürün
         </Button>
       </div>
@@ -125,7 +125,7 @@ export function ProductsTable() {
               <Input type="number" value={fReorder} onChange={(e) => setFReorder(e.target.value)} placeholder="0" className="h-8 border-paper-lines" />
             </div>
           </div>
-          <Button size="sm" onClick={handleCreate} disabled={isPending} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white">
+          <Button size="sm" onClick={handleCreate} disabled={isPending} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white w-full sm:w-auto">
             {isPending ? "Ekleniyor..." : "Ekle"}
           </Button>
         </div>
@@ -139,13 +139,13 @@ export function ProductsTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-surface/50 border-b border-paper-lines">
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Kod</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Ürün</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Birim</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted">Miktar</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted">Alış</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted">Satış</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted">Değer</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Kod</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Ürün</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden sm:table-cell">Birim</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Miktar</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden md:table-cell">Alış</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden md:table-cell">Satış</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden sm:table-cell">Değer</th>
                 <th className="w-8"></th>
               </tr>
             </thead>
@@ -155,15 +155,15 @@ export function ProductsTable() {
                 const isCritical = Number(p.current_quantity) <= Number(p.reorder_level) && Number(p.reorder_level) > 0;
                 return (
                   <tr key={p.id} className="border-b border-paper-lines last:border-0 hover:bg-surface/30">
-                    <td className="px-4 py-2 font-mono text-xs font-semibold text-ink">{p.code}</td>
-                    <td className="px-4 py-2 text-ink font-medium">{p.name}</td>
-                    <td className="px-4 py-2 text-ink-muted">{p.unit}</td>
-                    <td className={`px-4 py-2 text-right font-mono ${isCritical ? "text-red-600 font-bold" : "text-ink"}`}>
+                    <td className="px-3 sm:px-4 py-2 font-mono text-xs font-semibold text-ink">{p.code}</td>
+                    <td className="px-3 sm:px-4 py-2 text-ink font-medium">{p.name}</td>
+                    <td className="px-3 sm:px-4 py-2 text-ink-muted hidden sm:table-cell">{p.unit}</td>
+                    <td className={`px-3 sm:px-4 py-2 text-right font-mono ${isCritical ? "text-red-600 font-bold" : "text-ink"}`}>
                       {Number(p.current_quantity)}
                     </td>
-                    <td className="px-4 py-2 text-right font-mono text-ink-muted">{formatCurrency(Number(p.unit_cost))}</td>
-                    <td className="px-4 py-2 text-right font-mono text-ink">{formatCurrency(Number(p.unit_price))}</td>
-                    <td className="px-4 py-2 text-right font-mono text-ink">{formatCurrency(value)}</td>
+                    <td className="px-3 sm:px-4 py-2 text-right font-mono text-ink-muted hidden md:table-cell">{formatCurrency(Number(p.unit_cost))}</td>
+                    <td className="px-3 sm:px-4 py-2 text-right font-mono text-ink hidden md:table-cell">{formatCurrency(Number(p.unit_price))}</td>
+                    <td className="px-3 sm:px-4 py-2 text-right font-mono text-ink hidden sm:table-cell">{formatCurrency(value)}</td>
                     <td className="px-2 py-2">
                       {isCritical && <AlertTriangle className="h-4 w-4 text-red-500" />}
                     </td>

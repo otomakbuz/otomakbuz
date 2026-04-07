@@ -53,7 +53,7 @@ export function ReportTabs({
     <div className="space-y-6">
       {/* Tab navigation */}
       <div className="receipt-card rounded">
-        <div className="flex overflow-x-auto border-b border-paper-lines">
+        <div className="flex overflow-x-auto border-b border-paper-lines scrollbar-hide">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -62,13 +62,13 @@ export function ReportTabs({
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "flex items-center gap-2 px-5 py-3.5 text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
+                  "flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-3 sm:py-3.5 text-xs sm:text-sm font-medium whitespace-nowrap border-b-2 transition-colors",
                   isActive
                     ? "border-receipt-brown text-receipt-brown"
                     : "border-transparent text-ink-muted hover:text-ink hover:border-paper-lines"
                 )}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 {tab.label}
               </button>
             );
@@ -76,7 +76,7 @@ export function ReportTabs({
         </div>
 
         {/* Tab content */}
-        <div className="p-5">
+        <div className="p-3 sm:p-5">
           {activeTab === "trend" && (
             <div>
               <h3 className="text-sm font-semibold text-ink mb-1">Aylık Gelir / Gider Trendi</h3>

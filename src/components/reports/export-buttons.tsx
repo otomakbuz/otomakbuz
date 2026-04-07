@@ -15,7 +15,7 @@ export function ExportButtons({ documents }: { documents: Document[] }) {
         className="border-paper-lines hover:border-receipt-gold hover:text-receipt-brown transition-colors text-xs">
         <Download className="h-3.5 w-3.5 mr-1.5" />CSV
       </Button>
-      <Button variant="outline" size="sm" onClick={() => downloadExcel(documents)} disabled={disabled}
+      <Button variant="outline" size="sm" onClick={() => void downloadExcel(documents)} disabled={disabled}
         className="border-paper-lines hover:border-receipt-gold hover:text-receipt-brown transition-colors text-xs">
         <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />Excel
       </Button>

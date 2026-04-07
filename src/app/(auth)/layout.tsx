@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         {/* Top logo */}
         <div className="p-8">
           <Link href="/" className="inline-flex items-center gap-2.5">
-            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={36} height={36} className="rounded" />
+            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={36} height={36} className="rounded" style={{ width: 36, height: 36 }} />
             <span className="font-bold text-lg tracking-tight">
               <span className="text-brand">Oto</span>
               <span className="text-receipt-brown">makbuz</span>

@@ -104,11 +104,11 @@ export function JournalTable() {
 
       {/* Yeni Yevmiye Formu */}
       {showForm && (
-        <div className="p-4 rounded border border-receipt-gold/30 bg-receipt-gold/5 space-y-3">
-          <div className="flex gap-3">
-            <div>
+        <div className="p-3 sm:p-4 rounded border border-receipt-gold/30 bg-receipt-gold/5 space-y-3">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="w-full sm:w-auto">
               <label className="text-xs text-ink-muted font-medium">Tarih</label>
-              <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="h-8 w-40 border-paper-lines" />
+              <Input type="date" value={formDate} onChange={(e) => setFormDate(e.target.value)} className="h-8 sm:w-40 border-paper-lines" />
             </div>
             <div className="flex-1">
               <label className="text-xs text-ink-muted font-medium">Açıklama</label>
@@ -116,71 +116,120 @@ export function JournalTable() {
             </div>
           </div>
 
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-xs text-ink-muted">
-                <th className="text-left py-1">Hesap</th>
-                <th className="text-right py-1 w-28">Borç</th>
-                <th className="text-right py-1 w-28">Alacak</th>
-                <th className="w-8"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {formLines.map((line, i) => (
-                <tr key={i}>
-                  <td className="py-1 pr-2">
-                    <select
-                      value={line.account_code}
-                      onChange={(e) => updateLine(i, "account_code", e.target.value)}
-                      className="w-full h-8 px-2 rounded border border-paper-lines bg-paper text-sm"
-                    >
-                      <option value="">Hesap seçin</option>
-                      {accounts.map((a) => <option key={a.id} value={a.code}>{a.code} - {a.name}</option>)}
-                    </select>
-                  </td>
-                  <td className="py-1 px-1">
+          {/* Desktop table view for lines */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs text-ink-muted">
+                  <th className="text-left py-1">Hesap</th>
+                  <th className="text-right py-1 w-28">Borç</th>
+                  <th className="text-right py-1 w-28">Alacak</th>
+                  <th className="w-8"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {formLines.map((line, i) => (
+                  <tr key={i}>
+                    <td className="py-1 pr-2">
+                      <select
+                        value={line.account_code}
+                        onChange={(e) => updateLine(i, "account_code", e.target.value)}
+                        className="w-full h-8 px-2 rounded border border-paper-lines bg-paper text-sm"
+                      >
+                        <option value="">Hesap seçin</option>
+                        {accounts.map((a) => <option key={a.id} value={a.code}>{a.code} - {a.name}</option>)}
+                      </select>
+                    </td>
+                    <td className="py-1 px-1">
+                      <Input
+                        type="number" min="0" step="0.01"
+                        value={line.debit_amount || ""}
+                        onChange={(e) => updateLine(i, "debit_amount", parseFloat(e.target.value) || 0)}
+                        className="h-8 text-right border-paper-lines"
+                      />
+                    </td>
+                    <td className="py-1 px-1">
+                      <Input
+                        type="number" min="0" step="0.01"
+                        value={line.credit_amount || ""}
+                        onChange={(e) => updateLine(i, "credit_amount", parseFloat(e.target.value) || 0)}
+                        className="h-8 text-right border-paper-lines"
+                      />
+                    </td>
+                    <td className="py-1">
+                      <button onClick={() => removeLine(i)} className="text-ink-faint hover:text-red-500" disabled={formLines.length <= 2}>
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t border-paper-lines font-medium">
+                  <td className="py-2 text-right pr-2">Toplam:</td>
+                  <td className="py-2 px-1 text-right">{formatCurrency(totalDebit)}</td>
+                  <td className="py-2 px-1 text-right">{formatCurrency(totalCredit)}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          {/* Mobile stacked view for lines */}
+          <div className="sm:hidden space-y-3">
+            {formLines.map((line, i) => (
+              <div key={i} className="p-2.5 rounded border border-paper-lines bg-paper space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-ink-muted font-medium">Satır {i + 1}</span>
+                  <button onClick={() => removeLine(i)} className="text-ink-faint hover:text-red-500" disabled={formLines.length <= 2}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <select
+                  value={line.account_code}
+                  onChange={(e) => updateLine(i, "account_code", e.target.value)}
+                  className="w-full h-8 px-2 rounded border border-paper-lines bg-paper text-sm"
+                >
+                  <option value="">Hesap seçin</option>
+                  {accounts.map((a) => <option key={a.id} value={a.code}>{a.code} - {a.name}</option>)}
+                </select>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] text-ink-muted">Borç</label>
                     <Input
                       type="number" min="0" step="0.01"
                       value={line.debit_amount || ""}
                       onChange={(e) => updateLine(i, "debit_amount", parseFloat(e.target.value) || 0)}
                       className="h-8 text-right border-paper-lines"
                     />
-                  </td>
-                  <td className="py-1 px-1">
+                  </div>
+                  <div>
+                    <label className="text-[10px] text-ink-muted">Alacak</label>
                     <Input
                       type="number" min="0" step="0.01"
                       value={line.credit_amount || ""}
                       onChange={(e) => updateLine(i, "credit_amount", parseFloat(e.target.value) || 0)}
                       className="h-8 text-right border-paper-lines"
                     />
-                  </td>
-                  <td className="py-1">
-                    <button onClick={() => removeLine(i)} className="text-ink-faint hover:text-red-500" disabled={formLines.length <= 2}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr className="border-t border-paper-lines font-medium">
-                <td className="py-2 text-right pr-2">Toplam:</td>
-                <td className="py-2 px-1 text-right">{formatCurrency(totalDebit)}</td>
-                <td className="py-2 px-1 text-right">{formatCurrency(totalCredit)}</td>
-                <td></td>
-              </tr>
-            </tfoot>
-          </table>
+                  </div>
+                </div>
+              </div>
+            ))}
+            <div className="flex justify-between items-center py-2 border-t border-paper-lines text-sm font-medium">
+              <span>Toplam:</span>
+              <span>B: {formatCurrency(totalDebit)} / A: {formatCurrency(totalCredit)}</span>
+            </div>
+          </div>
 
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={addLine}>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+            <Button size="sm" variant="outline" onClick={addLine} className="w-full sm:w-auto">
               <Plus className="h-3 w-3 mr-1" />Satır Ekle
             </Button>
             <div className="flex-1" />
             {!isBalanced && totalDebit > 0 && (
-              <span className="text-xs text-red-600 font-medium">Borç ve Alacak eşit olmalıdır</span>
+              <span className="text-xs text-red-600 font-medium text-center sm:text-right">Borç ve Alacak eşit olmalıdır</span>
             )}
-            <Button size="sm" onClick={handleCreate} disabled={isPending || !isBalanced} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white">
+            <Button size="sm" onClick={handleCreate} disabled={isPending || !isBalanced} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white w-full sm:w-auto">
               {isPending ? "Kaydediliyor..." : "Kaydet"}
             </Button>
           </div>

@@ -30,9 +30,9 @@ export function BalanceSheet() {
 
   return (
     <div className="space-y-4">
-      <div className="grid lg:grid-cols-2 gap-4">
+      <div className="flex flex-col lg:flex-row gap-4">
         {/* Sol: Varlıklar */}
-        <div className="rounded border border-paper-lines overflow-hidden">
+        <div className="flex-1 rounded border border-paper-lines overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-blue-50/50 border-b border-paper-lines">
@@ -60,7 +60,7 @@ export function BalanceSheet() {
         </div>
 
         {/* Sağ: Pasif */}
-        <div className="rounded border border-paper-lines overflow-hidden">
+        <div className="flex-1 rounded border border-paper-lines overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-red-50/50 border-b border-paper-lines">

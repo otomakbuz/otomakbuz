@@ -115,7 +115,7 @@ export function StockMovementsTable() {
               <Input value={fNote} onChange={(e) => setFNote(e.target.value)} placeholder="Açıklama" className="h-8 border-paper-lines" />
             </div>
           </div>
-          <Button size="sm" onClick={handleCreate} disabled={isPending} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white">
+          <Button size="sm" onClick={handleCreate} disabled={isPending} className="bg-receipt-brown hover:bg-receipt-brown-dark text-white w-full sm:w-auto">
             {isPending ? "Kaydediliyor..." : "Kaydet"}
           </Button>
         </div>
@@ -128,12 +128,12 @@ export function StockMovementsTable() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-surface/50 border-b border-paper-lines">
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Tarih</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Ürün</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Tür</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted">Miktar</th>
-                <th className="text-right px-4 py-2.5 font-medium text-ink-muted">Birim Fiyat</th>
-                <th className="text-left px-4 py-2.5 font-medium text-ink-muted">Not</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden sm:table-cell">Tarih</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Ürün</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Tür</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted">Miktar</th>
+                <th className="text-right px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden sm:table-cell">Birim Fiyat</th>
+                <th className="text-left px-3 sm:px-4 py-2.5 font-medium text-ink-muted hidden md:table-cell">Not</th>
               </tr>
             </thead>
             <tbody>
@@ -142,20 +142,20 @@ export function StockMovementsTable() {
                 const isOut = m.movement_type === "sale" || m.movement_type === "return";
                 return (
                   <tr key={m.id} className="border-b border-paper-lines last:border-0 hover:bg-surface/30">
-                    <td className="px-4 py-2 text-ink">{formatDate(m.movement_date)}</td>
-                    <td className="px-4 py-2 text-ink font-medium">{product ? `${product.code} - ${product.name}` : "-"}</td>
-                    <td className="px-4 py-2">
+                    <td className="px-3 sm:px-4 py-2 text-ink hidden sm:table-cell">{formatDate(m.movement_date)}</td>
+                    <td className="px-3 sm:px-4 py-2 text-ink font-medium">{product ? `${product.code} - ${product.name}` : "-"}</td>
+                    <td className="px-3 sm:px-4 py-2">
                       <span className={`inline-flex px-2 py-0.5 rounded text-xs font-medium ${TYPE_COLORS[m.movement_type] || ""}`}>
                         {TYPE_LABELS[m.movement_type] || m.movement_type}
                       </span>
                     </td>
-                    <td className={`px-4 py-2 text-right font-mono font-medium ${isOut ? "text-red-600" : "text-emerald-600"}`}>
+                    <td className={`px-3 sm:px-4 py-2 text-right font-mono font-medium ${isOut ? "text-red-600" : "text-emerald-600"}`}>
                       {isOut ? "-" : "+"}{Math.abs(Number(m.quantity))}
                     </td>
-                    <td className="px-4 py-2 text-right font-mono text-ink-muted">
+                    <td className="px-3 sm:px-4 py-2 text-right font-mono text-ink-muted hidden sm:table-cell">
                       {m.unit_cost ? formatCurrency(Number(m.unit_cost)) : "-"}
                     </td>
-                    <td className="px-4 py-2 text-ink-muted text-xs">{m.reference_note || "-"}</td>
+                    <td className="px-3 sm:px-4 py-2 text-ink-muted text-xs hidden md:table-cell">{m.reference_note || "-"}</td>
                   </tr>
                 );
               })}

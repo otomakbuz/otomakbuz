@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck, BookOpen, Package } from "lucide-react";
+import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { signOut } from "@/lib/actions/auth";
@@ -21,7 +21,9 @@ const navItems = [
   { href: "/e-fatura", label: "E-Fatura", icon: FileCheck },
   { href: "/muhasebe", label: "Muhasebe", icon: BookOpen },
   { href: "/stok", label: "Stok", icon: Package },
+  { href: "/banka", label: "Banka", icon: Landmark },
   { href: "/hatirlaticilar", label: "Hatırlatıcılar", icon: Bell },
+  { href: "/veri", label: "Veri", icon: DatabaseZap },
   { href: "/ayarlar", label: "Ayarlar", icon: Settings },
 ];
 
@@ -35,7 +37,9 @@ const pageTitles: Record<string, string> = {
   "/e-fatura": "E-Fatura",
   "/muhasebe": "Muhasebe",
   "/stok": "Stok",
+  "/banka": "Banka",
   "/hatirlaticilar": "Hatırlatıcılar",
+  "/veri": "Veri",
   "/ayarlar": "Ayarlar",
 };
 

@@ -50,19 +50,21 @@ export default async function ReportsPage({
       </div>
 
       {/* Date filter + basic summary */}
-      <form className="flex gap-3 items-end receipt-card rounded p-4">
-        <div>
-          <label className="text-xs text-ink-muted mb-1 block font-medium">Başlangıç</label>
-          <input type="date" name="date_from" defaultValue={params.date_from || ""}
-            className="border border-paper-lines rounded px-3 py-2 text-sm bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-receipt-gold/30 focus:border-receipt-gold transition-colors" />
-        </div>
-        <div>
-          <label className="text-xs text-ink-muted mb-1 block font-medium">Bitiş</label>
-          <input type="date" name="date_to" defaultValue={params.date_to || ""}
-            className="border border-paper-lines rounded px-3 py-2 text-sm bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-receipt-gold/30 focus:border-receipt-gold transition-colors" />
+      <form className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-end receipt-card rounded p-3 sm:p-4">
+        <div className="flex gap-3 flex-1">
+          <div className="flex-1">
+            <label className="text-xs text-ink-muted mb-1 block font-medium">Başlangıç</label>
+            <input type="date" name="date_from" defaultValue={params.date_from || ""}
+              className="w-full border border-paper-lines rounded px-3 py-2 text-sm bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-receipt-gold/30 focus:border-receipt-gold transition-colors" />
+          </div>
+          <div className="flex-1">
+            <label className="text-xs text-ink-muted mb-1 block font-medium">Bitiş</label>
+            <input type="date" name="date_to" defaultValue={params.date_to || ""}
+              className="w-full border border-paper-lines rounded px-3 py-2 text-sm bg-paper text-ink focus:outline-none focus:ring-2 focus:ring-receipt-gold/30 focus:border-receipt-gold transition-colors" />
+          </div>
         </div>
         <button type="submit"
-          className="px-5 py-2 bg-receipt-brown text-white rounded text-sm font-medium hover:bg-receipt-brown-dark transition-colors shadow-sm">
+          className="px-5 py-2 bg-receipt-brown text-white rounded text-sm font-medium hover:bg-receipt-brown-dark transition-colors shadow-sm w-full sm:w-auto">
           Filtrele
         </button>
       </form>
