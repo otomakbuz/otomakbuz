@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getUserWorkspace } from "./auth";
+import { getUserWorkspace, getUser } from "./auth";
 import type { DocumentFilters, Document } from "@/types";
 
 export async function getDocuments(filters?: DocumentFilters) {
@@ -139,6 +139,124 @@ export async function getDocumentAuditLogs(documentId: string) {
 
   if (error) throw new Error(error.message);
   return data;
+}
+
+export async function bulkDeleteDocuments(ids: string[]) {
+  const supabase = await createClient();
+  const user = await getUser();
+  if (!user) throw new Error("Oturum açılmamış");
+  if (ids.length === 0) return;
+
+  // Storage dosyalarını bul ve sil
+  const { data: docs } = await supabase
+    .from("documents")
+    .select("id, original_file_url")
+    .in("id", ids);
+
+  // Audit log
+  await supabase.from("audit_logs").insert(
+    ids.map((id) => ({
+      document_id: id,
+      user_id: user.id,
+      action_type: "deleted" as const,
+      old_value: null,
+      new_value: null,
+    }))
+  );
+
+  // Belgeleri sil
+  const { error } = await supabase.from("documents").delete().in("id", ids);
+  if (error) throw new Error(error.message);
+
+  // Storage'dan orphan dosyaları temizle (best-effort)
+  if (docs) {
+    const pathSet = new Set<string>();
+    for (const doc of docs) {
+      if (!doc.original_file_url) continue;
+      const match = doc.original_file_url.match(/\/documents\/(.+?)(\?|$)/);
+      if (match) pathSet.add(match[1]);
+    }
+    // Aynı dosyayı paylaşan başka belge var mı kontrol et
+    for (const path of pathSet) {
+      const { count } = await supabase
+        .from("documents")
+        .select("*", { count: "exact", head: true })
+        .like("original_file_url", `%${path}%`);
+      if (count === 0) {
+        await supabase.storage.from("documents").remove([decodeURIComponent(path)]);
+      }
+    }
+  }
+}
+
+export async function retryOcr(documentId: string) {
+  const supabase = await createClient();
+  const user = await getUser();
+  const workspace = await getUserWorkspace();
+  if (!user || !workspace) throw new Error("Oturum açılmamış");
+
+  const { data: doc } = await supabase
+    .from("documents")
+    .select("original_file_url, file_type")
+    .eq("id", documentId)
+    .single();
+
+  if (!doc?.original_file_url) throw new Error("Belgenin dosya URL'i bulunamadı");
+
+  const { getOcrAdapter } = await import("@/lib/ocr");
+  const ocr = await getOcrAdapter(workspace.id);
+  const results = await ocr.processDocument(doc.original_file_url, doc.file_type || "jpeg");
+
+  if (!results || results.length === 0) {
+    throw new Error("OCR belgeyi okuyamadı. Lütfen daha net bir fotoğraf yükleyin.");
+  }
+
+  const result = results[0];
+  const { data: updated, error } = await supabase
+    .from("documents")
+    .update({
+      status: "needs_review",
+      document_type: result.document_type,
+      supplier_name: result.supplier_name,
+      supplier_tax_id: result.supplier_tax_id,
+      supplier_tax_office: result.supplier_tax_office,
+      supplier_address: result.supplier_address,
+      buyer_name: result.buyer_name,
+      buyer_tax_id: result.buyer_tax_id,
+      buyer_tax_office: result.buyer_tax_office,
+      buyer_address: result.buyer_address,
+      document_number: result.document_number,
+      issue_date: result.issue_date,
+      issue_time: result.issue_time,
+      waybill_number: result.waybill_number,
+      subtotal_amount: result.subtotal_amount,
+      vat_amount: result.vat_amount,
+      vat_rate: result.vat_rate,
+      withholding_amount: result.withholding_amount,
+      total_amount: result.total_amount,
+      currency: result.currency,
+      payment_method: result.payment_method,
+      line_items: result.line_items,
+      raw_ocr_text: result.raw_ocr_text,
+      confidence_score: result.confidence_score,
+      field_scores: result.field_scores,
+      parsed_json: result as unknown as Record<string, unknown>,
+    })
+    .eq("id", documentId)
+    .select("*, category:categories(*)")
+    .single();
+
+  if (error) throw new Error(error.message);
+
+  await supabase.from("audit_logs").insert({
+    document_id: documentId,
+    user_id: user.id,
+    action_type: "updated",
+    old_value: { status: "failed" },
+    new_value: { status: "needs_review", retry: true },
+  });
+
+  return updated as Document;
 }
 
 export async function getDashboardStats() {

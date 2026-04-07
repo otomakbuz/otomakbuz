@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell } from "lucide-react";
+import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mainNav = [
@@ -13,6 +13,7 @@ const mainNav = [
   { href: "/rehber", label: "Rehber", icon: Building2 },
   { href: "/cari", label: "Cari Hesap", icon: Scale },
   { href: "/raporlar", label: "Raporlar", icon: BarChart3 },
+  { href: "/e-fatura", label: "E-Fatura", icon: FileCheck },
 ];
 
 const bottomNav = [
@@ -28,7 +29,7 @@ export function Sidebar() {
       <div className="px-5 h-[60px] flex items-center border-b border-white/10">
         <Link href="/" className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded bg-white/20 flex items-center justify-center shadow-sm">
-            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={20} height={20} className="rounded-sm" />
+            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={20} height={20} className="rounded-sm" style={{ width: 20, height: 20 }} />
           </div>
           <span className="font-bold text-[15px] tracking-tight text-white">
             Otomakbuz

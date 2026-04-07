@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ["heic-convert", "heic-decode"],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "10mb",
+    },
+  },
   images: {
     remotePatterns: [
       {
@@ -9,6 +15,9 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/**",
       },
     ],
+  },
+  turbopack: {
+    root: "/Users/mertaysune/Desktop/makbuz-uygulama/otomakbuz",
   },
 };
 

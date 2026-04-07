@@ -5,10 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+const CURRENCY_ALIASES: Record<string, string> = { TL: "TRY", "₺": "TRY" };
+
 export function formatCurrency(amount: number, currency: string = "TRY"): string {
+  const code = CURRENCY_ALIASES[currency] ?? currency;
   return new Intl.NumberFormat("tr-TR", {
     style: "currency",
-    currency,
+    currency: code,
     minimumFractionDigits: 2,
   }).format(amount);
 }

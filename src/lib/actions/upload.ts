@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getOcrAdapter } from "@/lib/ocr";
 import { getUserWorkspace, getUser } from "./auth";
+import { convertHeicToJpeg } from "@/lib/heic-to-jpeg";
 
 /**
  * Dosyanın SHA-256 hash'ini hex olarak hesaplar.
@@ -62,10 +63,27 @@ export async function uploadAndProcessDocument(formData: FormData): Promise<Uplo
     throw duplicateError(existingByHash.id, "file");
   }
 
-  const fileExt = file.name.split(".").pop()?.toLowerCase() || "bin";
+  const origExt = file.name.split(".").pop()?.toLowerCase() || "bin";
+  const isHeic = origExt === "heic" || origExt === "heif";
+
+  // HEIC/HEIF → JPEG dönüşümü (OCR sağlayıcıları HEIC desteklemiyor)
+  let uploadPayload: File | Buffer = file;
+  let fileExt = origExt;
+  let contentType = file.type;
+  if (isHeic) {
+    const arrayBuf = await file.arrayBuffer();
+    uploadPayload = await convertHeicToJpeg(arrayBuf);
+    fileExt = "jpeg";
+    contentType = "image/jpeg";
+  }
+
   const filePath = `${workspace.id}/${crypto.randomUUID()}.${fileExt}`;
 
-  const { error: uploadError } = await supabase.storage.from("documents").upload(filePath, file);
+  const { error: uploadError } = await supabase.storage
+    .from("documents")
+    .upload(filePath, uploadPayload, {
+      contentType,
+    });
   if (uploadError) throw new Error(`Yukleme hatasi: ${uploadError.message}`);
 
   // Signed URL — bucket private olduğu için public URL 400 dönüyor.

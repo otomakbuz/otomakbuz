@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { ReviewForm } from "@/components/upload/review-form";
 import { StatusBadge } from "./status-badge";
 import { deleteDocument } from "@/lib/actions/documents";
+import { generateEFaturaXml } from "@/lib/actions/e-fatura";
 import { toast } from "sonner";
-import { Trash2, ArrowLeft, FileText, Clock } from "lucide-react";
+import { Trash2, ArrowLeft, FileText, Clock, FileCheck } from "lucide-react";
 import type { Document, Category, AuditLog } from "@/types";
 import { formatDate } from "@/lib/utils";
 
@@ -45,10 +46,33 @@ export function DocumentDetail({ document: doc, categories, auditLogs }: Documen
           <h1 className="text-xl font-bold text-ink">{doc.supplier_name || "Belge Detayı"}</h1>
           <StatusBadge status={doc.status} />
         </div>
-        <Button variant="destructive" size="sm" onClick={handleDelete}
-          className="bg-red-500 hover:bg-red-600">
-          <Trash2 className="h-4 w-4 mr-1" />Sil
-        </Button>
+        <div className="flex gap-2">
+          {doc.status === "verified" && (
+            <Button
+              size="sm" variant="outline"
+              className="border-receipt-gold text-receipt-brown hover:bg-receipt-gold/10"
+              onClick={async () => {
+                try {
+                  const { xml, filename } = await generateEFaturaXml(doc.id);
+                  const blob = new Blob([xml], { type: "application/xml" });
+                  const url = URL.createObjectURL(blob);
+                  const a = Object.assign(document.createElement("a"), { href: url, download: filename });
+                  a.click();
+                  URL.revokeObjectURL(url);
+                  toast.success("E-Fatura XML indirildi");
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "E-Fatura oluşturulamadı");
+                }
+              }}
+            >
+              <FileCheck className="h-4 w-4 mr-1" />E-Fatura XML
+            </Button>
+          )}
+          <Button variant="destructive" size="sm" onClick={handleDelete}
+            className="bg-red-500 hover:bg-red-600">
+            <Trash2 className="h-4 w-4 mr-1" />Sil
+          </Button>
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6 items-start">

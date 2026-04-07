@@ -3,19 +3,22 @@ import Link from "next/link";
 import { getDashboardStats } from "@/lib/actions/documents";
 import { getRecurringPatterns } from "@/lib/actions/patterns";
 import { getUpcomingReminders } from "@/lib/actions/reminders";
+import { getMonthlyTrends } from "@/lib/actions/reports";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { RecentDocuments } from "@/components/dashboard/recent-documents";
 import { CategoryChart } from "@/components/dashboard/category-chart";
 import { IncomeExpenseCard } from "@/components/dashboard/income-expense-card";
 import { RecurringPatternsCard } from "@/components/dashboard/recurring-patterns-card";
 import { UpcomingRemindersCard } from "@/components/dashboard/upcoming-reminders-card";
+import { MonthlyTrendMini } from "@/components/dashboard/monthly-trend-mini";
 import { formatCurrency } from "@/lib/utils";
 
 export default async function DashboardPage() {
-  const [stats, patterns, upcomingReminders] = await Promise.all([
+  const [stats, patterns, upcomingReminders, monthlyTrends] = await Promise.all([
     getDashboardStats(),
     getRecurringPatterns(),
     getUpcomingReminders(),
+    getMonthlyTrends(6).catch(() => []),
   ]);
   return (
     <div className="space-y-8">
@@ -39,6 +42,12 @@ export default async function DashboardPage() {
         <StatCard title="Bu Ay Gider" value={formatCurrency(stats.total_expense_this_month)} icon={TrendingDown} description="Toplam harcama" />
         <StatCard title="Bu Ay Gelir" value={formatCurrency(stats.total_income_this_month)} icon={TrendingUp} description="Toplam gelir" />
         <StatCard title="İnceleme Bekleyen" value={stats.pending_review_count} icon={AlertCircle} description="Doğrulama gerektiren" />
+      </div>
+
+      {/* Trend chart */}
+      <div className="receipt-card rounded p-4">
+        <h2 className="text-base font-semibold text-ink mb-3">Aylık Gelir / Gider Trendi</h2>
+        <MonthlyTrendMini data={monthlyTrends} />
       </div>
 
       {/* Charts row */}

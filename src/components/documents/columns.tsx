@@ -11,6 +11,27 @@ import type { DocumentDirection } from "@/types";
 
 export const columns: ColumnDef<Document>[] = [
   {
+    id: "select",
+    header: ({ table }) => (
+      <input
+        type="checkbox"
+        checked={table.getIsAllPageRowsSelected()}
+        onChange={table.getToggleAllPageRowsSelectedHandler()}
+        className="rounded accent-[#A0845C]"
+      />
+    ),
+    cell: ({ row }) => (
+      <input
+        type="checkbox"
+        checked={row.getIsSelected()}
+        onChange={row.getToggleSelectedHandler()}
+        className="rounded accent-[#A0845C]"
+        onClick={(e) => e.stopPropagation()}
+      />
+    ),
+    enableSorting: false,
+  },
+  {
     accessorKey: "issue_date",
     header: "Tarih",
     cell: ({ row }) => {

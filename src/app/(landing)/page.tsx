@@ -29,7 +29,7 @@ export default function LandingPage() {
             </PricingDialog>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/giris">
+            <Link href="/giris" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm" className="text-ink-muted hover:text-ink font-medium text-sm">
                 Giriş Yap
               </Button>

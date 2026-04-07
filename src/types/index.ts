@@ -6,6 +6,16 @@ export type DocumentStatus =
   | "archived"
   | "failed";
 
+export type EInvoiceStatus = "draft" | "sent" | "delivered" | "rejected";
+
+export interface CompanyInfo {
+  company_tax_id: string | null;
+  company_tax_office: string | null;
+  company_address: string | null;
+  company_phone: string | null;
+  company_email: string | null;
+}
+
 /**
  * Türk vergi mevzuatına göre belge türleri (VUK 229-234).
  * MVP: fatura, perakende_fis, serbest_meslek_makbuzu, gider_pusulasi
@@ -192,6 +202,9 @@ export interface Document {
   field_scores: Record<string, number> | null;
   raw_ocr_text: string | null;
   parsed_json: Record<string, unknown> | null;
+  // E-Fatura
+  e_invoice_status: EInvoiceStatus | null;
+  e_invoice_uuid: string | null;
   // Tekilleştirme — SHA-256 hex, workspace içinde unique
   file_hash: string | null;
   // Çoklu-fiş fotoğrafında 0-tabanlı sıra (tek belgede 0)

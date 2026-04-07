@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell } from "lucide-react";
+import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { signOut } from "@/lib/actions/auth";
@@ -18,6 +18,7 @@ const navItems = [
   { href: "/rehber", label: "Rehber", icon: Building2 },
   { href: "/cari", label: "Cari Hesap", icon: Scale },
   { href: "/raporlar", label: "Raporlar", icon: BarChart3 },
+  { href: "/e-fatura", label: "E-Fatura", icon: FileCheck },
   { href: "/hatirlaticilar", label: "Hatırlatıcılar", icon: Bell },
   { href: "/ayarlar", label: "Ayarlar", icon: Settings },
 ];
@@ -29,6 +30,7 @@ const pageTitles: Record<string, string> = {
   "/rehber": "Rehber",
   "/cari": "Cari Hesap",
   "/raporlar": "Raporlar",
+  "/e-fatura": "E-Fatura",
   "/hatirlaticilar": "Hatırlatıcılar",
   "/ayarlar": "Ayarlar",
 };
@@ -55,7 +57,7 @@ export function Header() {
             <div className="px-5 py-5">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
                 <div className="w-9 h-9 rounded bg-white/15 flex items-center justify-center">
-                  <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={24} height={24} className="rounded" />
+                  <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={24} height={24} className="rounded" style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="font-bold text-lg tracking-tight text-white">
                   Otomakbuz
@@ -84,7 +86,7 @@ export function Header() {
         {/* Mobile logo */}
         <div className="md:hidden">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={28} height={28} className="rounded" />
+            <Image src="/otomakbuz logo.png" alt="Otomakbuz" width={28} height={28} className="rounded" style={{ width: 28, height: 28 }} />
             <span className="font-bold text-base tracking-tight">
               <span className="text-brand">Oto</span>
               <span className="text-receipt-brown">makbuz</span>

@@ -8,10 +8,11 @@ import { createCategory, updateCategory, deleteCategory } from "@/lib/actions/ca
 import { updateWorkspace } from "@/lib/actions/workspace";
 import { getSettingsPageData } from "@/lib/actions/settings-page";
 import { toast } from "sonner";
-import { Plus, Trash2, Pencil, Settings, Tag, Save, Users, Plug, Mail, FileSpreadsheet, Copy, Check, Brain } from "lucide-react";
+import { Plus, Trash2, Pencil, Settings, Tag, Save, Users, Plug, Mail, FileSpreadsheet, Copy, Check, Brain, FileCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TeamTab } from "@/components/settings/team-tab";
 import { OcrTab } from "@/components/settings/ocr-tab";
+import { EFaturaTab } from "@/components/settings/e-fatura-tab";
 import type { Category, Workspace, WorkspaceMember, WorkspaceInvitation, WorkspaceRole } from "@/types";
 
 const tabs = [
@@ -19,6 +20,7 @@ const tabs = [
   { id: "kategoriler", label: "Kategoriler", icon: Tag },
   { id: "ocr", label: "OCR", icon: Brain },
   { id: "takim", label: "Takim", icon: Users },
+  { id: "efatura", label: "E-Fatura", icon: FileCheck },
   { id: "entegrasyon", label: "Entegrasyonlar", icon: Plug },
 ] as const;
 
@@ -230,6 +232,9 @@ export default function SettingsPage() {
       {activeTab === "takim" && (
         <TeamTab members={members} invitations={invitations} currentRole={currentRole} />
       )}
+
+      {/* E-Fatura */}
+      {activeTab === "efatura" && <EFaturaTab />}
 
       {/* Entegrasyonlar */}
       {activeTab === "entegrasyon" && (
