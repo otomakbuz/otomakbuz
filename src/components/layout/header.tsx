@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap } from "lucide-react";
+import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap, FilePlus, FileOutput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { signOut } from "@/lib/actions/auth";
@@ -14,7 +14,9 @@ import { NotificationBell } from "@/components/layout/notification-bell";
 const navItems = [
   { href: "/panel", label: "Panel", icon: LayoutDashboard },
   { href: "/yukle", label: "Belge Yükle", icon: Upload },
+  { href: "/fatura-kes", label: "Fatura Kes", icon: FilePlus },
   { href: "/belgeler", label: "Belgeler", icon: FileText },
+  { href: "/faturalarim", label: "Faturalarım", icon: FileOutput },
   { href: "/rehber", label: "Rehber", icon: Building2 },
   { href: "/cari", label: "Cari Hesap", icon: Scale },
   { href: "/raporlar", label: "Raporlar", icon: BarChart3 },
@@ -30,7 +32,9 @@ const navItems = [
 const pageTitles: Record<string, string> = {
   "/panel": "Panel",
   "/yukle": "Belge Yükle",
+  "/fatura-kes": "Fatura Kes",
   "/belgeler": "Belgeler",
+  "/faturalarim": "Faturalarım",
   "/rehber": "Rehber",
   "/cari": "Cari Hesap",
   "/raporlar": "Raporlar",

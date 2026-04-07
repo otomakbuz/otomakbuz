@@ -572,3 +572,53 @@ export interface ImportResult {
   skipped: number;
   errors: string[];
 }
+
+// ─── Fatura Kesme ───
+
+export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
+
+export interface InvoiceLineItem {
+  id: string;
+  description: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  vat_rate: number;
+  line_total: number;
+  vat_amount: number;
+  product_id?: string;
+}
+
+export interface OutgoingInvoice {
+  id: string;
+  document_number: string;
+  issue_date: string;
+  due_date?: string;
+  contact_id?: string;
+  contact?: Contact;
+  buyer_name: string;
+  buyer_tax_id?: string;
+  buyer_tax_office?: string;
+  buyer_address?: string;
+  buyer_email?: string;
+  buyer_phone?: string;
+  line_items: InvoiceLineItem[];
+  subtotal_amount: number;
+  vat_amount: number;
+  withholding_amount?: number;
+  total_amount: number;
+  currency: string;
+  payment_method?: string;
+  notes?: string;
+  payment_terms?: string;
+  status: InvoiceStatus;
+  e_invoice_status?: EInvoiceStatus;
+}
+
+export interface InvoiceStats {
+  total_count: number;
+  total_amount: number;
+  unpaid_count: number;
+  unpaid_amount: number;
+  overdue_count: number;
+}

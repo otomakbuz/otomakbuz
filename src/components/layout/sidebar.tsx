@@ -3,13 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap } from "lucide-react";
+import { LayoutDashboard, Upload, FileText, BarChart3, Settings, HelpCircle, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap, FilePlus, FileOutput } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mainNav = [
   { href: "/panel", label: "Panel", icon: LayoutDashboard },
   { href: "/yukle", label: "Belge Yükle", icon: Upload },
+  { href: "/fatura-kes", label: "Fatura Kes", icon: FilePlus, accent: true },
   { href: "/belgeler", label: "Belgeler", icon: FileText },
+  { href: "/faturalarim", label: "Faturalarım", icon: FileOutput },
   { href: "/rehber", label: "Rehber", icon: Building2 },
   { href: "/cari", label: "Cari Hesap", icon: Scale },
   { href: "/raporlar", label: "Raporlar", icon: BarChart3 },
@@ -28,7 +30,7 @@ const bottomNav = [
 export function Sidebar() {
   const pathname = usePathname();
   return (
-    <aside className="hidden md:flex md:flex-col md:w-[240px] receipt-sidebar receipt-perforation flex-shrink-0">
+    <aside className="hidden md:flex md:flex-col md:w-[240px] receipt-sidebar receipt-perforation flex-shrink-0 overflow-y-auto">
       {/* Logo */}
       <div className="px-5 h-[60px] flex items-center border-b border-white/10">
         <Link href="/" className="flex items-center gap-2.5">
@@ -46,13 +48,16 @@ export function Sidebar() {
         <div className="space-y-0.5">
           {mainNav.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isAccent = 'accent' in item && item.accent;
             return (
               <Link key={item.href} href={item.href}
                 className={cn(
                   "flex items-center gap-3 px-3 py-2.5 rounded text-[13px] font-medium transition-all duration-150",
                   isActive
                     ? "bg-white/25 text-white shadow-sm backdrop-blur-sm"
-                    : "text-white/70 hover:bg-white/12 hover:text-white"
+                    : isAccent
+                      ? "bg-receipt-gold/20 text-receipt-gold hover:bg-receipt-gold/30 hover:text-white"
+                      : "text-white/70 hover:bg-white/12 hover:text-white"
                 )}>
                 <item.icon className="h-[17px] w-[17px]" />
                 {item.label}
