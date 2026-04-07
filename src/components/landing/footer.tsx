@@ -44,7 +44,7 @@ export function Footer() {
           {/* Logo */}
           <div className="col-span-2 sm:col-span-1">
             <div className="flex items-center gap-2.5 mb-4">
-              <Image src="/logo-icon.svg" alt="Otomakbuz" width={28} height={28} />
+              <Image src="/logo-icon.png" alt="Otomakbuz" width={28} height={28} className="brightness-150" />
               <span className="font-bold text-base tracking-tight">
                 <span className="text-receipt-gold">Oto</span>
                 <span className="text-white">makbuz</span>

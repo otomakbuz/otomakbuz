@@ -34,7 +34,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 h-[60px] flex items-center border-b border-white/10">
         <Link href="/" className="flex items-center gap-2.5">
-          <Image src="/logo-white.svg" alt="Otomakbuz" width={32} height={32} className="flex-shrink-0" />
+          <Image src="/logo-icon.png" alt="Otomakbuz" width={32} height={32} className="flex-shrink-0 brightness-150" />
           <span className="font-bold text-[15px] tracking-tight text-white">
             Otomakbuz
           </span>
