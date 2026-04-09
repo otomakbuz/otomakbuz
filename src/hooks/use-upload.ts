@@ -5,10 +5,14 @@ import { toast } from "sonner";
 import { uploadAndProcessDocument } from "@/lib/actions/upload";
 import type { Document } from "@/types";
 
+export type UploadStep = "uploading" | "analyzing" | "extracting";
+
 export type UploadItem = {
   id: string;
   file: File;
   status: "pending" | "uploading" | "done" | "error";
+  /** Mevcut işlem adımı — loading UI'da aşamalı gösterim için */
+  step?: UploadStep;
   result?: Document;
   error?: string;
   /** Aynı fotoğraftaki belge sırası (çoklu fiş fotoğrafı için) */
@@ -32,11 +36,22 @@ export function useUpload() {
   }, []);
 
   async function processItem(itemId: string, file: File) {
-    setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "uploading" } : i)));
+    setItems((prev) => prev.map((i) => (i.id === itemId ? { ...i, status: "uploading", step: "uploading" as UploadStep } : i)));
+
+    // Adım geçişlerini zamanlayıcıyla simüle et — server action tek çağrı
+    // ama kullanıcıya aşamalı ilerleme gösteriyoruz.
+    const stepTimers: ReturnType<typeof setTimeout>[] = [];
+    const setStep = (step: UploadStep) =>
+      setItems((prev) => prev.map((i) => (i.id === itemId && i.status === "uploading" ? { ...i, step } : i)));
+
+    stepTimers.push(setTimeout(() => setStep("analyzing"), 1200));
+    stepTimers.push(setTimeout(() => setStep("extracting"), 3500));
+
     try {
       const formData = new FormData();
       formData.append("file", file);
       const { documents, skipped } = await uploadAndProcessDocument(formData);
+      stepTimers.forEach(clearTimeout);
 
       if (documents.length === 0) {
         throw new Error("Belge kaydedilemedi");
@@ -92,6 +107,7 @@ export function useUpload() {
       setActiveReviewId((current) => current ?? itemId);
       toast.success(`${documents.length} belge bir fotoğraftan çıkarıldı`);
     } catch (err) {
+      stepTimers.forEach(clearTimeout);
       const rawMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
       // DUPLICATE: prefix'i upload.ts'den gelir; kullanıcı dostu toast göster
       if (rawMsg.startsWith("DUPLICATE:")) {

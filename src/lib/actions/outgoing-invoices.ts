@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getUserWorkspace, getUser } from "./auth";
 import { revalidatePath } from "next/cache";
+import { getTcmbRates, convertToTry } from "@/lib/tcmb";
 import type {
   Document,
   InvoiceLineItem,
@@ -137,6 +138,31 @@ export async function createOutgoingInvoice(formData: FormData): Promise<Documen
     old_value: null,
     new_value: { source: "outgoing_invoice" },
   });
+
+  // Tekrarlayan fatura ise hatırlatıcı oluştur
+  const isRecurring = formData.get("is_recurring") === "true";
+  if (isRecurring) {
+    const interval = (formData.get("recurring_interval") as string) || "monthly";
+    const issueDate = (formData.get("issue_date") as string) || new Date().toISOString().split("T")[0];
+    const nextDate = new Date(issueDate);
+    if (interval === "monthly") nextDate.setMonth(nextDate.getMonth() + 1);
+    else if (interval === "quarterly") nextDate.setMonth(nextDate.getMonth() + 3);
+    else nextDate.setFullYear(nextDate.getFullYear() + 1);
+
+    const freqMap: Record<string, string> = { monthly: "monthly", quarterly: "quarterly", yearly: "yearly" };
+    await supabase.from("reminders").insert({
+      workspace_id: workspace.id,
+      user_id: user.id,
+      title: `Tekrarlayan fatura: ${(formData.get("buyer_name") as string) || "Alıcı"}`,
+      description: `${documentNumber} numaralı faturanın tekrarı. Tutar: ${total.toFixed(2)} ${(formData.get("currency") as string) || "TRY"}`,
+      type: "payment",
+      due_date: nextDate.toISOString().split("T")[0],
+      contact_id: contactId,
+      document_id: data.id,
+      is_recurring: true,
+      recurrence_frequency: freqMap[interval] || "monthly",
+    });
+  }
 
   revalidatePath("/faturalarim");
   revalidatePath("/belgeler");
@@ -409,6 +435,56 @@ export async function getInvoiceStats(): Promise<InvoiceStats> {
   };
 }
 
+/** Vadesi yaklaşan veya geçen faturaları getir */
+export async function getOverdueInvoices(): Promise<{ overdue: Document[]; dueSoon: Document[] }> {
+  const supabase = await createClient();
+  const workspace = await getUserWorkspace();
+  if (!workspace) return { overdue: [], dueSoon: [] };
+
+  const today = new Date().toISOString().split("T")[0];
+  const sevenDaysLater = new Date();
+  sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+  const sevenDaysStr = sevenDaysLater.toISOString().split("T")[0];
+
+  // Ödenmemiş giden faturalar
+  const { data } = await supabase
+    .from("documents")
+    .select("id, document_number, buyer_name, total_amount, issue_date, currency, notes, e_invoice_status")
+    .eq("workspace_id", workspace.id)
+    .eq("direction", "income")
+    .eq("document_type", "fatura")
+    .eq("file_type", "invoice")
+    .neq("e_invoice_status", "delivered")
+    .not("notes", "eq", "Ödendi")
+    .order("issue_date", { ascending: true });
+
+  if (!data) return { overdue: [], dueSoon: [] };
+
+  const overdue: Document[] = [];
+  const dueSoon: Document[] = [];
+
+  for (const inv of data) {
+    // due_date yoksa issue_date + 30 gün
+    const dueDate = (inv as unknown as Record<string, unknown>).due_date as string | undefined;
+    const effectiveDue = dueDate || (() => {
+      if (!inv.issue_date) return null;
+      const d = new Date(inv.issue_date);
+      d.setDate(d.getDate() + 30);
+      return d.toISOString().split("T")[0];
+    })();
+
+    if (!effectiveDue) continue;
+
+    if (effectiveDue < today) {
+      overdue.push(inv as Document);
+    } else if (effectiveDue <= sevenDaysStr) {
+      dueSoon.push(inv as Document);
+    }
+  }
+
+  return { overdue, dueSoon };
+}
+
 // Fatura verilerini ve firma bilgilerini tek seferde al (settings-page pattern)
 export async function getInvoicePageData() {
   const supabase = await createClient();
@@ -456,4 +532,15 @@ export async function getInvoicePageData() {
         ? contactsResult.value.data
         : [],
   };
+}
+
+/** TCMB günlük döviz kurları */
+export async function fetchExchangeRates() {
+  const rates = await getTcmbRates();
+  return rates.filter((r) => ["USD", "EUR", "GBP"].includes(r.code));
+}
+
+/** Döviz tutarını TL'ye çevir */
+export async function convertCurrencyToTry(amount: number, currencyCode: string) {
+  return convertToTry(amount, currencyCode);
 }

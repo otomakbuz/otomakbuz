@@ -89,17 +89,18 @@ export async function updateDocument(id: string, updates: Partial<Document>) {
 
 export async function verifyDocument(id: string) {
   const supabase = await createClient();
+  const workspace = await getUserWorkspace();
 
-  // Belge bilgilerini al (cari hareket icin)
+  // Belge bilgilerini al (cari hareket + muhasebe kaydı için)
   const { data: doc } = await supabase
     .from("documents")
-    .select("contact_id, total_amount, direction, supplier_name, issue_date")
+    .select("contact_id, total_amount, vat_amount, direction, supplier_name, buyer_name, issue_date, document_number, payment_method")
     .eq("id", id)
     .single();
 
   const result = await updateDocument(id, { status: "verified" } as Partial<Document>);
 
-  // Contact bagliysa ve tutar varsa otomatik cari hareket olustur
+  // Contact bağlıysa ve tutar varsa otomatik cari hareket oluştur
   if (doc?.contact_id && doc?.total_amount) {
     const { createLedgerEntryFromDocument } = await import("./ledger");
     await createLedgerEntryFromDocument(
@@ -110,6 +111,58 @@ export async function verifyDocument(id: string) {
       doc.supplier_name || "Bilinmeyen",
       doc.issue_date || undefined
     );
+  }
+
+  // Otomatik yevmiye kaydı oluştur (hesap planı varsa)
+  if (doc?.total_amount && workspace) {
+    try {
+      const { createJournalEntry } = await import("./accounting");
+
+      // Hesap planı var mı kontrol et
+      const { count } = await supabase
+        .from("accounts")
+        .select("*", { count: "exact", head: true })
+        .eq("workspace_id", workspace.id);
+
+      if (count && count > 0) {
+        const isExpense = doc.direction !== "income";
+        const netAmount = doc.total_amount;
+        const vatAmount = doc.vat_amount || 0;
+        const baseAmount = netAmount - vatAmount;
+
+        const partyName = isExpense ? (doc.supplier_name || "Tedarikçi") : (doc.buyer_name || "Müşteri");
+        const docNo = doc.document_number ? ` (${doc.document_number})` : "";
+        const description = `${partyName}${docNo} — otomatik kayıt`;
+
+        // Ödeme yöntemi → hesap kodu
+        const cashAccount = doc.payment_method === "kredi_karti" || doc.payment_method === "banka_karti"
+          ? "102" // Bankalar
+          : "100"; // Kasa
+
+        const lines = isExpense
+          ? [
+              // Gider: Gider hesabı borç, KDV borç, Kasa/Banka alacak
+              { account_code: "770", debit_amount: baseAmount, credit_amount: 0, description: `Gider — ${partyName}` },
+              ...(vatAmount > 0 ? [{ account_code: "191", debit_amount: vatAmount, credit_amount: 0, description: "İndirilecek KDV" }] : []),
+              { account_code: cashAccount, debit_amount: 0, credit_amount: netAmount, description: `Ödeme — ${partyName}` },
+            ]
+          : [
+              // Gelir: Kasa/Banka borç, KDV alacak, Gelir hesabı alacak
+              { account_code: cashAccount, debit_amount: netAmount, credit_amount: 0, description: `Tahsilat — ${partyName}` },
+              ...(vatAmount > 0 ? [{ account_code: "391", debit_amount: 0, credit_amount: vatAmount, description: "Hesaplanan KDV" }] : []),
+              { account_code: "600", debit_amount: 0, credit_amount: baseAmount, description: `Gelir — ${partyName}` },
+            ];
+
+        await createJournalEntry(
+          doc.issue_date || new Date().toISOString().split("T")[0],
+          description,
+          lines
+        );
+      }
+    } catch {
+      // Muhasebe kaydı oluşturulamazsa belge doğrulamayı engelleme
+      console.warn(`[verifyDocument] Otomatik yevmiye kaydı oluşturulamadı: belge ${id}`);
+    }
   }
 
   return result;
@@ -341,4 +394,197 @@ async function getDashboardStatsFallback() {
     category_distribution: Array.from(categoryMap.values()),
     recent_documents: (recentRes.data || []) as Document[],
   };
+}
+
+/** Dashboard AI performans metrikleri */
+export async function getAiPerformanceStats() {
+  const supabase = await createClient();
+  const workspace = await getUserWorkspace();
+  if (!workspace) {
+    return { totalProcessed: 0, avgConfidence: 0, highConfRate: 0, fieldAccuracy: [] as { field: string; avg: number }[] };
+  }
+
+  const { data } = await supabase
+    .from("documents")
+    .select("confidence_score, field_scores")
+    .eq("workspace_id", workspace.id)
+    .not("confidence_score", "is", null);
+
+  if (!data || data.length === 0) {
+    return { totalProcessed: 0, avgConfidence: 0, highConfRate: 0, fieldAccuracy: [] };
+  }
+
+  const scores = data.map((d) => d.confidence_score as number);
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const highConf = scores.filter((s) => s >= 85).length;
+
+  // Field bazlı ortalama doğruluk
+  const fieldTotals = new Map<string, { sum: number; count: number }>();
+  for (const doc of data) {
+    const fs = doc.field_scores as Record<string, number> | null;
+    if (!fs) continue;
+    for (const [field, score] of Object.entries(fs)) {
+      if (typeof score !== "number" || score <= 0) continue;
+      const existing = fieldTotals.get(field);
+      if (existing) { existing.sum += score; existing.count++; }
+      else { fieldTotals.set(field, { sum: score, count: 1 }); }
+    }
+  }
+
+  const fieldAccuracy = Array.from(fieldTotals.entries())
+    .map(([field, { sum, count }]) => ({ field, avg: Math.round(sum / count) }))
+    .sort((a, b) => b.avg - a.avg);
+
+  return {
+    totalProcessed: data.length,
+    avgConfidence: Math.round(avg),
+    highConfRate: Math.round((highConf / data.length) * 100),
+    fieldAccuracy,
+  };
+}
+
+/** AI Performans sayfası için detaylı metrikler */
+export async function getDetailedAiStats() {
+  const supabase = await createClient();
+  const workspace = await getUserWorkspace();
+  if (!workspace) {
+    return {
+      totalProcessed: 0, avgConfidence: 0, highConfRate: 0,
+      fieldAccuracy: [] as { field: string; avg: number; count: number }[],
+      monthlyTrend: [] as { month: string; avg: number; count: number }[],
+      docTypeAccuracy: [] as { type: string; avg: number; count: number }[],
+      confidenceDistribution: { high: 0, medium: 0, low: 0, unread: 0 },
+      recentDocuments: [] as { id: string; supplier_name: string | null; confidence_score: number; created_at: string; document_type: string | null }[],
+    };
+  }
+
+  const { data } = await supabase
+    .from("documents")
+    .select("id, confidence_score, field_scores, created_at, document_type, supplier_name")
+    .eq("workspace_id", workspace.id)
+    .not("confidence_score", "is", null)
+    .neq("file_type", "manual")
+    .order("created_at", { ascending: false });
+
+  if (!data || data.length === 0) {
+    return {
+      totalProcessed: 0, avgConfidence: 0, highConfRate: 0,
+      fieldAccuracy: [], monthlyTrend: [], docTypeAccuracy: [],
+      confidenceDistribution: { high: 0, medium: 0, low: 0, unread: 0 },
+      recentDocuments: [],
+    };
+  }
+
+  const scores = data.map((d) => d.confidence_score as number);
+  const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+  const highConf = scores.filter((s) => s >= 85).length;
+
+  // Güven dağılımı
+  const confidenceDistribution = {
+    high: scores.filter((s) => s >= 85).length,
+    medium: scores.filter((s) => s >= 60 && s < 85).length,
+    low: scores.filter((s) => s >= 30 && s < 60).length,
+    unread: scores.filter((s) => s < 30).length,
+  };
+
+  // Field bazlı doğruluk (count dahil)
+  const fieldTotals = new Map<string, { sum: number; count: number }>();
+  for (const doc of data) {
+    const fs = doc.field_scores as Record<string, number> | null;
+    if (!fs) continue;
+    for (const [field, score] of Object.entries(fs)) {
+      if (typeof score !== "number" || score <= 0) continue;
+      const existing = fieldTotals.get(field);
+      if (existing) { existing.sum += score; existing.count++; }
+      else { fieldTotals.set(field, { sum: score, count: 1 }); }
+    }
+  }
+  const fieldAccuracy = Array.from(fieldTotals.entries())
+    .map(([field, { sum, count }]) => ({ field, avg: Math.round(sum / count), count }))
+    .sort((a, b) => b.avg - a.avg);
+
+  // Aylık trend
+  const monthMap = new Map<string, { sum: number; count: number }>();
+  for (const doc of data) {
+    const month = (doc.created_at as string).slice(0, 7); // YYYY-MM
+    const s = doc.confidence_score as number;
+    const existing = monthMap.get(month);
+    if (existing) { existing.sum += s; existing.count++; }
+    else { monthMap.set(month, { sum: s, count: 1 }); }
+  }
+  const monthlyTrend = Array.from(monthMap.entries())
+    .map(([month, { sum, count }]) => ({ month, avg: Math.round(sum / count), count }))
+    .sort((a, b) => a.month.localeCompare(b.month));
+
+  // Belge türü bazlı accuracy
+  const typeMap = new Map<string, { sum: number; count: number }>();
+  for (const doc of data) {
+    const type = (doc.document_type as string) || "bilinmeyen";
+    const s = doc.confidence_score as number;
+    const existing = typeMap.get(type);
+    if (existing) { existing.sum += s; existing.count++; }
+    else { typeMap.set(type, { sum: s, count: 1 }); }
+  }
+  const docTypeAccuracy = Array.from(typeMap.entries())
+    .map(([type, { sum, count }]) => ({ type, avg: Math.round(sum / count), count }))
+    .sort((a, b) => b.count - a.count);
+
+  // Son 10 belge
+  const recentDocuments = data.slice(0, 10).map((d) => ({
+    id: d.id,
+    supplier_name: d.supplier_name,
+    confidence_score: d.confidence_score as number,
+    created_at: d.created_at as string,
+    document_type: d.document_type,
+  }));
+
+  return {
+    totalProcessed: data.length,
+    avgConfidence: Math.round(avg),
+    highConfRate: Math.round((highConf / data.length) * 100),
+    fieldAccuracy,
+    monthlyTrend,
+    docTypeAccuracy,
+    confidenceDistribution,
+    recentDocuments,
+  };
+}
+
+/** Belge yüklemeden hızlı gelir/gider girişi */
+export async function createQuickEntry(params: {
+  direction: "income" | "expense";
+  amount: number;
+  description: string;
+  categoryId: string | null;
+  date: string;
+}) {
+  const supabase = await createClient();
+  const user = await getUser();
+  const workspace = await getUserWorkspace();
+  if (!user || !workspace) throw new Error("Oturum açılmamış");
+
+  const { data, error } = await supabase
+    .from("documents")
+    .insert({
+      workspace_id: workspace.id,
+      user_id: user.id,
+      original_file_url: "",
+      file_type: "manual",
+      document_type: "diger",
+      direction: params.direction,
+      status: "verified",
+      supplier_name: params.description,
+      total_amount: params.amount,
+      currency: "TRY",
+      issue_date: params.date,
+      category_id: params.categoryId,
+      notes: `Hızlı giriş: ${params.description}`,
+      confidence_score: 100,
+      sub_index: 0,
+    })
+    .select("*, category:categories(*)")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as Document;
 }

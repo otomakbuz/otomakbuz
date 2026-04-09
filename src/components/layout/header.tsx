@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap, FilePlus, FileOutput } from "lucide-react";
+import { Menu, LayoutDashboard, Upload, FileText, BarChart3, Settings, LogOut, ChevronRight, HelpCircle, User, Building2, Scale, Bell, FileCheck, BookOpen, Package, Landmark, DatabaseZap, FilePlus, FileOutput, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { signOut } from "@/lib/actions/auth";
@@ -26,6 +26,7 @@ const navItems = [
   { href: "/banka", label: "Banka", icon: Landmark },
   { href: "/hatirlaticilar", label: "Hatırlatıcılar", icon: Bell },
   { href: "/veri", label: "Veri", icon: DatabaseZap },
+  { href: "/ai-performans", label: "AI Performans", icon: Brain },
   { href: "/ayarlar", label: "Ayarlar", icon: Settings },
 ];
 
@@ -44,6 +45,7 @@ const pageTitles: Record<string, string> = {
   "/banka": "Banka",
   "/hatirlaticilar": "Hatırlatıcılar",
   "/veri": "Veri",
+  "/ai-performans": "AI Performans",
   "/ayarlar": "Ayarlar",
 };
 

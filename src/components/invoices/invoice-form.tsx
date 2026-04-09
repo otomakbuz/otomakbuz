@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Save,
@@ -8,6 +8,7 @@ import {
   Download,
   FileCode,
   Calendar,
+  Repeat,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -24,7 +25,7 @@ import {
 import { ContactSelector } from "./contact-selector";
 import { LineItemsEditor, newLineItem, calcLineItem } from "./line-items-editor";
 import { InvoicePreview } from "./invoice-preview";
-import { createOutgoingInvoice } from "@/lib/actions/outgoing-invoices";
+import { createOutgoingInvoice, convertCurrencyToTry } from "@/lib/actions/outgoing-invoices";
 import { generateEFaturaXml } from "@/lib/actions/e-fatura";
 import type { InvoiceLineItem, CompanyInfo } from "@/types";
 
@@ -88,10 +89,24 @@ export function InvoiceForm({ contacts, company }: InvoiceFormProps) {
   const [withholdingAmount, setWithholdingAmount] = useState(0);
   const [notes, setNotes] = useState("");
   const [paymentTerms, setPaymentTerms] = useState("");
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringInterval, setRecurringInterval] = useState<"monthly" | "quarterly" | "yearly">("monthly");
+  const [tryEquivalent, setTryEquivalent] = useState<{ tryAmount: number; rate: number } | null>(null);
 
   const subtotal = lineItems.reduce((sum, li) => sum + li.line_total, 0);
   const vatAmount = lineItems.reduce((sum, li) => sum + li.vat_amount, 0);
   const total = subtotal + vatAmount - withholdingAmount;
+
+  // TCMB kur çekme — döviz seçildiğinde TL karşılığını göster
+  useEffect(() => {
+    if (currency === "TRY" || total <= 0) {
+      setTryEquivalent(null);
+      return;
+    }
+    convertCurrencyToTry(total, currency).then((result) => {
+      setTryEquivalent(result);
+    }).catch(() => setTryEquivalent(null));
+  }, [currency, total]);
 
   const handleContactSelect = useCallback(
     (contact: ContactOption | null) => {
@@ -130,6 +145,8 @@ export function InvoiceForm({ contacts, company }: InvoiceFormProps) {
       fd.set("notes", notes);
       fd.set("payment_terms", paymentTerms);
       fd.set("line_items", JSON.stringify(lineItems));
+      fd.set("is_recurring", isRecurring ? "true" : "false");
+      fd.set("recurring_interval", recurringInterval);
       return fd;
     },
     [
@@ -146,6 +163,8 @@ export function InvoiceForm({ contacts, company }: InvoiceFormProps) {
       notes,
       paymentTerms,
       lineItems,
+      isRecurring,
+      recurringInterval,
     ]
   );
 
@@ -424,6 +443,19 @@ export function InvoiceForm({ contacts, company }: InvoiceFormProps) {
         )}
       </div>
 
+      {/* TCMB Kur Göstergesi */}
+      {tryEquivalent && currency !== "TRY" && (
+        <div className="receipt-card rounded px-5 py-3 bg-blue-50/50 border-blue-200/50 flex items-center justify-between">
+          <div className="text-sm text-blue-800">
+            <span className="font-medium">TCMB Kuru:</span>{" "}
+            1 {currency} = {tryEquivalent.rate.toFixed(4)} TL
+          </div>
+          <div className="text-sm font-bold text-blue-900">
+            TL Karşılığı: {tryEquivalent.tryAmount.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺
+          </div>
+        </div>
+      )}
+
       {/* Notes section */}
       <div className="receipt-card rounded p-5">
         <h2 className="text-sm font-bold text-ink mb-4">Notlar</h2>
@@ -447,6 +479,42 @@ export function InvoiceForm({ contacts, company }: InvoiceFormProps) {
             />
           </div>
         </div>
+      </div>
+
+      {/* Tekrarlayan Fatura */}
+      <div className="receipt-card rounded p-5">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-bold text-ink flex items-center gap-2">
+            <Repeat className="h-4 w-4 text-receipt-gold" />
+            Tekrarlayan Fatura
+          </h2>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isRecurring}
+              onChange={(e) => setIsRecurring(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-paper-lines rounded-full peer peer-checked:bg-receipt-brown transition-colors after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full" />
+          </label>
+        </div>
+        {isRecurring && (
+          <div className="mt-4 flex items-center gap-3">
+            <Label className="text-xs text-ink-muted whitespace-nowrap">Tekrar periyodu:</Label>
+            <select
+              value={recurringInterval}
+              onChange={(e) => setRecurringInterval(e.target.value as "monthly" | "quarterly" | "yearly")}
+              className="h-9 text-sm rounded-lg border border-input bg-transparent px-2.5"
+            >
+              <option value="monthly">Her ay</option>
+              <option value="quarterly">Her 3 ay</option>
+              <option value="yearly">Her yıl</option>
+            </select>
+            <p className="text-xs text-ink-faint">
+              Bu fatura kaydedildikten sonra otomatik olarak tekrarlanacak.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Action buttons */}

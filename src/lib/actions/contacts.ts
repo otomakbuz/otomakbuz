@@ -183,3 +183,149 @@ export async function deleteContactPerson(personId: string) {
   const { error } = await supabase.from("contact_persons").delete().eq("id", personId);
   if (error) throw new Error(error.message);
 }
+
+/** Demo için örnek cari verisi ekler. Zaten veri varsa atlar. */
+export async function seedMockContacts() {
+  const supabase = await createClient();
+  const workspace = await getUserWorkspace();
+  if (!workspace) throw new Error("Workspace bulunamadi");
+
+  // Zaten cari varsa ekleme
+  const { count } = await supabase
+    .from("contacts")
+    .select("*", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id);
+
+  if (count && count > 0) {
+    return { added: 0, message: "Zaten cari kayıtları mevcut" };
+  }
+
+  const mockContacts = [
+    {
+      workspace_id: workspace.id,
+      company_name: "Migros Ticaret A.Ş.",
+      type: "supplier",
+      tax_id: "8590377552",
+      tax_office: "Büyük Mükellefler",
+      phone: "0850 200 20 20",
+      email: "info@migros.com.tr",
+      address: "Ataşehir, Atasehir Bulvarı No:17",
+      city: "İstanbul",
+      notes: "Market alışverişleri",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "Shell & Turcas Petrol A.Ş.",
+      type: "supplier",
+      tax_id: "5765063498",
+      tax_office: "Büyük Mükellefler",
+      phone: "0216 544 75 00",
+      email: "bilgi@shell.com.tr",
+      address: "Çamlıca, Üsküdar",
+      city: "İstanbul",
+      notes: "Araç yakıt giderleri",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "Turkcell İletişim Hizmetleri A.Ş.",
+      type: "supplier",
+      tax_id: "6480055437",
+      tax_office: "Büyük Mükellefler",
+      phone: "0532 000 05 32",
+      email: "kurumsal@turkcell.com.tr",
+      address: "Maltepe, Aydınevler",
+      city: "İstanbul",
+      notes: "Telefon ve internet faturaları",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "Amazon Türkiye",
+      type: "supplier",
+      tax_id: "9060049498",
+      tax_office: "Marmara Kurumlar",
+      phone: "0800 200 20 20",
+      email: "siparis@amazon.com.tr",
+      address: "Sancaktepe",
+      city: "İstanbul",
+      notes: "Ofis malzemeleri ve teknoloji alımları",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "Hepsiburada",
+      type: "supplier",
+      tax_id: "8911088722",
+      tax_office: "Beykoz",
+      phone: "0850 252 40 00",
+      email: "destek@hepsiburada.com",
+      address: "Beykoz, Kavacık",
+      city: "İstanbul",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "İGDAŞ",
+      type: "supplier",
+      tax_id: "3960046515",
+      tax_office: "Mecidiyeköy",
+      phone: "0212 287 11 11",
+      email: "iletisim@igdas.istanbul",
+      address: "Mecidiyeköy, Şişli",
+      city: "İstanbul",
+      notes: "Doğalgaz faturaları",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "İSKİ",
+      type: "supplier",
+      tax_id: "4650048648",
+      tax_office: "Kağıthane",
+      phone: "0212 321 57 57",
+      email: "iletisim@iski.istanbul",
+      address: "Kağıthane",
+      city: "İstanbul",
+      notes: "Su faturaları",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "ABC Yazılım Ltd. Şti.",
+      type: "customer",
+      tax_id: "1234567890",
+      tax_office: "Kadıköy",
+      phone: "0216 555 12 34",
+      email: "info@abcyazilim.com",
+      address: "Kadıköy, Caferağa Mah.",
+      city: "İstanbul",
+      notes: "Yazılım danışmanlık müşterisi",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "Deniz Mimarlık",
+      type: "customer",
+      tax_id: "9876543210",
+      tax_office: "Beşiktaş",
+      phone: "0212 444 56 78",
+      email: "proje@denizmimarlik.com",
+      address: "Beşiktaş, Levent",
+      city: "İstanbul",
+      notes: "Mimarlık ofisi — aylık muhasebe hizmeti",
+    },
+    {
+      workspace_id: workspace.id,
+      company_name: "Elif Sağlık Gıda",
+      type: "customer",
+      tax_id: "4567891230",
+      tax_office: "Ümraniye",
+      phone: "0216 333 44 55",
+      email: "siparis@elifsaglik.com",
+      address: "Ümraniye, Çakmak",
+      city: "İstanbul",
+    },
+  ];
+
+  const { data, error } = await supabase
+    .from("contacts")
+    .insert(mockContacts)
+    .select();
+
+  if (error) throw new Error(error.message);
+  return { added: data?.length || 0, message: `${data?.length} cari eklendi` };
+}

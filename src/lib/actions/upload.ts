@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getOcrAdapter } from "@/lib/ocr";
 import { getUserWorkspace, getUser } from "./auth";
 import { convertHeicToJpeg } from "@/lib/heic-to-jpeg";
+import { normalizeVatRate, guessDocumentType } from "@/lib/utils/turkish-validators";
 
 /**
  * Dosyanın SHA-256 hash'ini hex olarak hesaplar.
@@ -117,6 +118,43 @@ export async function uploadAndProcessDocument(formData: FormData): Promise<Uplo
   }
 
   // ───────────────────────────────────────────────────────────
+  // Otomatik kategori tahmini — önceki belgelerin kategorisine bak
+  // ───────────────────────────────────────────────────────────
+  async function guessCategory(supplierName: string | null, supplierTaxId: string | null): Promise<string | null> {
+    if (!supplierName && !supplierTaxId) return null;
+
+    // 1) VKN ile eşleşme (en güvenilir)
+    if (supplierTaxId) {
+      const { data: byTax } = await supabase
+        .from("documents")
+        .select("category_id")
+        .eq("workspace_id", workspace.id)
+        .eq("supplier_tax_id", supplierTaxId)
+        .not("category_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (byTax?.category_id) return byTax.category_id;
+    }
+
+    // 2) Firma adı ile eşleşme
+    if (supplierName) {
+      const { data: byName } = await supabase
+        .from("documents")
+        .select("category_id")
+        .eq("workspace_id", workspace.id)
+        .ilike("supplier_name", supplierName)
+        .not("category_id", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (byName?.category_id) return byName.category_id;
+    }
+
+    return null;
+  }
+
+  // ───────────────────────────────────────────────────────────
   // Her belgeyi ayrı satır olarak insert et
   // ───────────────────────────────────────────────────────────
   const created: import("@/types").Document[] = [];
@@ -124,6 +162,23 @@ export async function uploadAndProcessDocument(formData: FormData): Promise<Uplo
 
   for (let i = 0; i < results.length; i++) {
     const result = results[i];
+
+    // Türkçe belge tanıma düzeltmeleri
+    const normalizedVatRate = normalizeVatRate(result.vat_rate);
+    const guessedDocType = result.document_type || guessDocumentType(result.raw_ocr_text || "");
+
+    // Otomatik kategori tahmini + cari eşleştirmesi
+    const guessedCategoryId = await guessCategory(result.supplier_name, result.supplier_tax_id);
+
+    let contactId: string | null = null;
+    if (result.supplier_name) {
+      try {
+        const { matchContactByName } = await import("./contacts");
+        const matched = await matchContactByName(result.supplier_name);
+        if (matched) contactId = matched.id;
+      } catch { /* cari eşleşmezse devam et */ }
+    }
+
     const { data: insertedDoc, error: insertError } = await supabase
       .from("documents")
       .insert({
@@ -134,7 +189,8 @@ export async function uploadAndProcessDocument(formData: FormData): Promise<Uplo
         file_hash: fileHash,
         sub_index: i,
         status: "needs_review",
-        document_type: result.document_type,
+        document_type: guessedDocType || result.document_type,
+        category_id: guessedCategoryId,
         // Düzenleyen (satıcı)
         supplier_name: result.supplier_name,
         supplier_tax_id: result.supplier_tax_id,
@@ -153,11 +209,12 @@ export async function uploadAndProcessDocument(formData: FormData): Promise<Uplo
         // Tutarlar
         subtotal_amount: result.subtotal_amount,
         vat_amount: result.vat_amount,
-        vat_rate: result.vat_rate,
+        vat_rate: normalizedVatRate,
         withholding_amount: result.withholding_amount,
         total_amount: result.total_amount,
         currency: result.currency,
         payment_method: result.payment_method,
+        contact_id: contactId,
         // Kalemler
         line_items: result.line_items,
         // Meta

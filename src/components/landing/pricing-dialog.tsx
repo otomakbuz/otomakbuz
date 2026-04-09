@@ -72,7 +72,7 @@ export function PricingDialog({ children }: { children: React.ReactNode }) {
     <Dialog open={open} onOpenChange={setOpen}>
       <button
         onClick={() => setOpen(true)}
-        className="text-sm text-ink-muted hover:text-ink transition-colors font-medium"
+        className="text-sm text-inherit hover:opacity-100 opacity-70 transition-colors font-medium"
       >
         {children}
       </button>

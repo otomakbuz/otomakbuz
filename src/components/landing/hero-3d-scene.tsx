@@ -52,16 +52,24 @@ function Cloud() {
     }
   });
 
-  // Puff pozisyonları: [x, y, z, r]
+  // Puff pozisyonları: [x, y, z, r] — derinlik katmanları ile 3D his
   const puffs: Array<[number, number, number, number]> = [
-    [0, 0, 0, 0.62],
-    [-0.55, -0.08, 0, 0.46],
-    [0.58, -0.1, 0, 0.50],
-    [-0.22, 0.28, 0.05, 0.44],
-    [0.32, 0.25, 0.05, 0.46],
-    [-0.88, 0.08, -0.05, 0.34],
-    [0.9, 0.05, -0.05, 0.36],
-    [0, 0.35, -0.1, 0.38],
+    // Arka katman
+    [0, -0.05, -0.35, 0.58],
+    [-0.5, 0.1, -0.28, 0.40],
+    [0.55, 0.08, -0.30, 0.42],
+    // Orta katman (ana gövde)
+    [0, 0, 0, 0.65],
+    [-0.58, -0.08, -0.05, 0.48],
+    [0.60, -0.1, -0.03, 0.52],
+    [-0.24, 0.30, 0.05, 0.46],
+    [0.34, 0.27, 0.05, 0.48],
+    // Ön katman — hafif dışarı çıkık
+    [-0.90, 0.06, 0.15, 0.36],
+    [0.92, 0.04, 0.18, 0.38],
+    [0, 0.38, 0.12, 0.40],
+    [-0.35, -0.18, 0.20, 0.32],
+    [0.38, -0.16, 0.22, 0.30],
   ];
 
   return (
@@ -136,7 +144,7 @@ type ReceiptContent = {
 function UploadingReceipt({
   phase,
   xOffset,
-  cycle = 5.5,
+  cycle = 5.0,
   content,
 }: {
   phase: number;
@@ -145,45 +153,63 @@ function UploadingReceipt({
   content: ReceiptContent;
 }) {
   const groupRef = useRef<THREE.Group>(null);
+  const scanRef = useRef<THREE.Mesh>(null);
+  const scanGlowRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     if (!groupRef.current) return;
     const t = ((state.clock.elapsedTime + phase) % cycle) / cycle; // 0..1
 
     let y: number, scale: number, rotZ: number;
+    let scanY = -99; // scan line gizli
+    let scanOpacity = 0;
 
-    // Faz eşikleri — cycle 5.5s. Sıra: belir → 1s bekle → tara → buluta fırla → kaybol
-    // 1s idle = 1/5.5 ≈ 0.182 cycle
-    const P1_END = 0.12;     // belir
-    const IDLE_END = 0.30;   // +1s bekleme (tarama öncesi)
-    const SCAN_END = 0.72;   // tarama bitişi
-    const LAUNCH_END = 0.94; // buluta fırla bitişi
+    // Faz eşikleri — daha hızlı ritim, kısa idle
+    const P1_END = 0.10;     // belir
+    const IDLE_END = 0.18;   // kısa bekleme
+    const SCAN_END = 0.62;   // tarama + yükselme
+    const LAUNCH_END = 0.90; // buluta fırla
+    const W = 0.95;
+    const H = 1.38;
 
     if (t < P1_END) {
-      // 1) Alt'tan belir
+      // 1) Alt'tan belir — bounce easing
       const p = t / P1_END;
-      y = -2.2 + p * 0.4;
-      scale = p;
+      const eased = 1 - Math.pow(1 - p, 3);
+      y = -2.2 + eased * 0.4;
+      scale = eased;
       rotZ = 0;
     } else if (t < IDLE_END) {
-      // 1.5) 1 saniye bekle — hafif yüzer, henüz taranmıyor
+      // 1.5) Kısa bekleme — nefes al
       const p = (t - P1_END) / (IDLE_END - P1_END);
-      y = -1.8 + Math.sin(p * Math.PI) * 0.03;
+      y = -1.8 + Math.sin(p * Math.PI) * 0.02;
       scale = 1;
-      rotZ = Math.sin(p * Math.PI * 0.8) * 0.02;
-    } else if (t < SCAN_END) {
-      // 2) Tarama + yükselme — scan line üstten aşağı süpürüyor
-      const p = (t - IDLE_END) / (SCAN_END - IDLE_END);
-      y = -1.8 + p * 1.4;
-      scale = 1;
-      rotZ = Math.sin(p * Math.PI * 2) * 0.04;
+      rotZ = 0;
     } else if (t < LAUNCH_END) {
-      // 3) Buluta doğru hızlanarak fırla, küçül
-      const p = (t - SCAN_END) / (LAUNCH_END - SCAN_END);
-      const eased = p * p;
-      y = -0.4 + eased * 2.05;
-      scale = 1 - eased * 0.9;
-      rotZ = eased * 0.35;
+      // 2+3) Tarama, yükselme ve fırlatma — scan line tüm süre boyunca aktif
+      const isScanning = t < SCAN_END;
+      if (isScanning) {
+        const p = (t - IDLE_END) / (SCAN_END - IDLE_END);
+        y = -1.8 + p * 1.4;
+        scale = 1;
+        rotZ = Math.sin(p * Math.PI * 2) * 0.03;
+      } else {
+        const p = (t - SCAN_END) / (LAUNCH_END - SCAN_END);
+        const eased = p * p * p;
+        y = -0.4 + eased * 2.05;
+        scale = 1 - eased * 0.9;
+        rotZ = eased * 0.35;
+      }
+
+      // Scan line — idle sonundan fırlatma sonuna kadar sürekli süpürür
+      const totalScanP = (t - IDLE_END) / (LAUNCH_END - IDLE_END); // 0..1 tüm tarama+fırlatma
+      const sweepSpeed = 3; // toplam kaç süpürme
+      const scanP = (totalScanP * sweepSpeed) % 1;
+      scanY = (H / 2) - scanP * H;
+      // Başta fade in, sona doğru fade out
+      const fadeIn = Math.min(totalScanP / 0.05, 1);
+      const fadeOut = totalScanP > 0.85 ? (1 - totalScanP) / 0.15 : 1;
+      scanOpacity = 0.9 * fadeIn * fadeOut;
     } else {
       // 4) Görünmez
       y = 1.65;
@@ -194,6 +220,16 @@ function UploadingReceipt({
     groupRef.current.position.set(xOffset, y, 0);
     groupRef.current.scale.setScalar(Math.max(scale, 0.001) * 0.8);
     groupRef.current.rotation.z = rotZ;
+
+    // Scan line pozisyonu
+    if (scanRef.current) {
+      scanRef.current.position.y = scanY;
+      (scanRef.current.material as THREE.MeshBasicMaterial).opacity = scanOpacity;
+    }
+    if (scanGlowRef.current) {
+      scanGlowRef.current.position.y = scanY;
+      (scanGlowRef.current.material as THREE.MeshBasicMaterial).opacity = scanOpacity * 0.4;
+    }
   });
 
   const W = 0.95;
@@ -209,6 +245,17 @@ function UploadingReceipt({
           roughness={0.95}
           side={THREE.DoubleSide}
         />
+      </mesh>
+
+      {/* Scan line — parlak yatay çizgi */}
+      <mesh ref={scanRef} position={[0, -99, 0.01]}>
+        <planeGeometry args={[W - 0.04, 0.02]} />
+        <meshBasicMaterial color="#D4A574" transparent opacity={0} />
+      </mesh>
+      {/* Scan glow — çizginin etrafındaki ışık hüzmesi */}
+      <mesh ref={scanGlowRef} position={[0, -99, 0.008]}>
+        <planeGeometry args={[W - 0.02, 0.12]} />
+        <meshBasicMaterial color="#D4A574" transparent opacity={0} />
       </mesh>
 
       {/* Başlık */}
@@ -317,37 +364,49 @@ function UploadingReceipt({
 
 function UploadParticles() {
   const groupRef = useRef<THREE.Group>(null);
-  const count = 10;
+  const count = 16;
   const particles = useMemo(
     () =>
       Array.from({ length: count }).map((_, i) => ({
-        phase: (i / count) * 3.2,
-        x: (i % 2 === 0 ? -1 : 1) * (0.15 + Math.random() * 0.6),
+        phase: (i / count) * 4.0 + Math.random() * 0.5,
+        x: (i % 2 === 0 ? -1 : 1) * (0.1 + Math.random() * 0.7),
+        speed: 0.7 + Math.random() * 0.6,
+        size: 0.02 + Math.random() * 0.03,
+        z: -0.1 + Math.random() * 0.3,
+        // Renk tonu: altın ile kahve arası
+        colorIdx: i % 3,
       })),
     []
   );
+
+  const COLORS = ["#D4A574", "#C8956E", "#E0B890"];
 
   useFrame((state) => {
     if (!groupRef.current) return;
     groupRef.current.children.forEach((child, i) => {
       const p = particles[i];
       if (!p) return;
-      const cycle = 3.2;
+      const cycle = 3.2 / p.speed;
       const t = ((state.clock.elapsedTime + p.phase) % cycle) / cycle;
-      child.position.y = -0.2 + t * 2.1;
-      child.position.x = p.x * (1 - t * 0.85);
+      // Spiral hareket — düz çizgi yerine hafif kıvrım
+      child.position.y = -0.4 + t * 2.5;
+      child.position.x = p.x * (1 - t * 0.85) + Math.sin(t * Math.PI * 3) * 0.08;
+      child.position.z = p.z + Math.cos(t * Math.PI * 2) * 0.05;
+      // Boyut: yukarı çıktıkça küçülsün
+      const s = p.size * (1 - t * 0.5);
+      child.scale.setScalar(s / p.size);
       const mesh = child as THREE.Mesh;
       const mat = mesh.material as THREE.MeshBasicMaterial;
-      mat.opacity = t < 0.15 ? t / 0.15 : t > 0.85 ? (1 - t) / 0.15 : 1;
+      mat.opacity = t < 0.1 ? t / 0.1 : t > 0.8 ? (1 - t) / 0.2 : 0.85;
     });
   });
 
   return (
     <group ref={groupRef}>
       {particles.map((p, i) => (
-        <mesh key={i} position={[p.x, -0.2, 0.1]}>
-          <sphereGeometry args={[0.035, 12, 12]} />
-          <meshBasicMaterial color="#D4A574" transparent opacity={0.9} />
+        <mesh key={i} position={[p.x, -0.4, p.z]}>
+          <sphereGeometry args={[p.size, 10, 10]} />
+          <meshBasicMaterial color={COLORS[p.colorIdx]} transparent opacity={0.85} />
         </mesh>
       ))}
     </group>

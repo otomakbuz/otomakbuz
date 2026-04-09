@@ -29,6 +29,7 @@ import {
   getFieldRequirement,
   type FieldRequirement,
 } from "@/lib/document-types";
+import { validateTaxId } from "@/lib/utils/turkish-validators";
 
 interface ReviewFormProps {
   document: Document;
@@ -265,6 +266,14 @@ export function ReviewForm({ document: doc, categories, onSaved }: ReviewFormPro
               defaultValue={doc.supplier_tax_id || ""}
               className="h-7 text-xs border-paper-lines bg-paper"
             />
+            {doc.supplier_tax_id && (() => {
+              const v = validateTaxId(doc.supplier_tax_id);
+              return (
+                <span className={cn("text-[9px] mt-0.5", v.valid ? "text-emerald-600" : "text-red-500")}>
+                  {v.message}
+                </span>
+              );
+            })()}
           </FieldRow>
         )}
         {show("supplier_tax_office") && (
@@ -315,6 +324,14 @@ export function ReviewForm({ document: doc, categories, onSaved }: ReviewFormPro
                   defaultValue={doc.buyer_tax_id || ""}
                   className="h-7 text-xs border-paper-lines bg-paper"
                 />
+                {doc.buyer_tax_id && (() => {
+                  const v = validateTaxId(doc.buyer_tax_id);
+                  return (
+                    <span className={cn("text-[9px] mt-0.5", v.valid ? "text-emerald-600" : "text-red-500")}>
+                      {v.message}
+                    </span>
+                  );
+                })()}
               </FieldRow>
             )}
             {show("buyer_tax_office") && (

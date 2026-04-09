@@ -2,9 +2,15 @@
 
 import { useCallback, useState } from "react";
 import Image from "next/image";
-import { FileText, Loader2, Upload, FileUp, Eye, AlertCircle } from "lucide-react";
+import { FileText, Loader2, Upload, FileUp, Eye, AlertCircle, CloudUpload, Brain, ScanText, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { UploadItem } from "@/hooks/use-upload";
+import type { UploadItem, UploadStep } from "@/hooks/use-upload";
+
+const STEPS: { key: UploadStep; label: string; icon: typeof CloudUpload }[] = [
+  { key: "uploading", label: "Dosya yükleniyor", icon: CloudUpload },
+  { key: "analyzing", label: "AI analiz ediyor", icon: Brain },
+  { key: "extracting", label: "Veriler çıkarılıyor", icon: ScanText },
+];
 
 const ACCEPTED_TYPES = [
   "image/jpeg",
@@ -88,13 +94,53 @@ export function DocumentPreview({ item, previewUrl, onFiles }: DocumentPreviewPr
         {/* Preview area */}
         <div className="flex-1 relative bg-surface/50 min-h-[500px]">
           {isProcessing && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/60 backdrop-blur-[1px]">
-              <div className="flex flex-col items-center">
-                <div className="w-14 h-14 rounded-full bg-receipt-gold/15 flex items-center justify-center mb-3">
-                  <Loader2 className="h-6 w-6 text-receipt-brown animate-spin" />
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-surface/60 backdrop-blur-[2px]">
+              <div className="flex flex-col items-center w-64">
+                {/* Aktif adımın ikonu */}
+                <div className="w-16 h-16 rounded-full bg-receipt-gold/15 flex items-center justify-center mb-5">
+                  {(() => {
+                    const currentStep = item.step || "uploading";
+                    const StepIcon = STEPS.find((s) => s.key === currentStep)?.icon || CloudUpload;
+                    return <StepIcon className="h-7 w-7 text-receipt-brown animate-pulse" />;
+                  })()}
                 </div>
-                <p className="text-sm font-medium text-ink">Belge okunuyor...</p>
-                <p className="text-xs text-ink-faint mt-1">Veriler otomatik doldurulacak</p>
+
+                {/* Aşamalı stepper */}
+                <div className="flex flex-col gap-3 w-full">
+                  {STEPS.map((step, idx) => {
+                    const currentIdx = STEPS.findIndex((s) => s.key === (item.step || "uploading"));
+                    const isDone = idx < currentIdx;
+                    const isActive = idx === currentIdx;
+                    const Icon = step.icon;
+                    return (
+                      <div key={step.key} className="flex items-center gap-3">
+                        <div className={cn(
+                          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500",
+                          isDone && "bg-emerald-100 text-emerald-600",
+                          isActive && "bg-receipt-gold/20 text-receipt-brown ring-2 ring-receipt-gold/30",
+                          !isDone && !isActive && "bg-paper-lines/30 text-ink-faint"
+                        )}>
+                          {isDone ? (
+                            <CheckCircle className="h-4 w-4" />
+                          ) : isActive ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Icon className="h-4 w-4" />
+                          )}
+                        </div>
+                        <span className={cn(
+                          "text-sm transition-all duration-500",
+                          isDone && "text-emerald-600 font-medium",
+                          isActive && "text-ink font-semibold",
+                          !isDone && !isActive && "text-ink-faint"
+                        )}>
+                          {step.label}
+                          {isActive && <span className="animate-pulse">...</span>}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           )}

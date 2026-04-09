@@ -1,4 +1,4 @@
-import { Check, X } from "lucide-react";
+import { Check, X, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ConfidenceBadgeProps {
@@ -6,34 +6,56 @@ interface ConfidenceBadgeProps {
   showLabel?: boolean;
 }
 
-// %80 ve üstü → "doğru" (tik), altı → "kontrol et" (X)
-const CONFIDENCE_THRESHOLD = 80;
+function getLevel(score: number) {
+  if (score >= 85) return { color: "emerald", label: "Yüksek", Icon: Check, unread: false } as const;
+  if (score >= 60) return { color: "amber", label: "Orta", Icon: AlertTriangle, unread: false } as const;
+  if (score >= 30) return { color: "red", label: "Düşük", Icon: X, unread: false } as const;
+  return { color: "red", label: "Okunamadı", Icon: X, unread: true } as const;
+}
+
+const colorMap = {
+  emerald: {
+    bg: "bg-emerald-50",
+    border: "border-emerald-200",
+    text: "text-emerald-700",
+    icon: "text-emerald-600",
+  },
+  amber: {
+    bg: "bg-amber-50",
+    border: "border-amber-200",
+    text: "text-amber-700",
+    icon: "text-amber-600",
+  },
+  red: {
+    bg: "bg-red-50",
+    border: "border-red-200",
+    text: "text-red-700",
+    icon: "text-red-600",
+  },
+} as const;
 
 export function ConfidenceBadge({ score, showLabel = false }: ConfidenceBadgeProps) {
   if (score === null || score === undefined) {
     return <span className="text-ink-faint text-sm">-</span>;
   }
 
-  const isOk = score >= CONFIDENCE_THRESHOLD;
+  const rounded = Math.round(score);
+  const { color, label, Icon, unread } = getLevel(score);
+  const c = colorMap[color];
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full border text-ink",
-        showLabel ? "px-2 py-0.5 text-xs font-medium" : "h-5 w-5 justify-center p-0",
-        "border-paper-lines bg-surface"
+        "inline-flex items-center gap-1 rounded-full border font-medium",
+        c.bg, c.border,
+        showLabel ? "px-2 py-0.5 text-xs" : "px-1.5 py-0.5 text-[10px]"
       )}
-      title={`Güven: %${Math.round(score)}`}
-      aria-label={isOk ? "Doğru bilgi" : "Kontrol et"}
+      title={unread ? "Okunamadı" : `Güven: %${rounded}`}
+      aria-label={unread ? "Okunamadı" : `${label} güven: %${rounded}`}
     >
-      {isOk ? (
-        <Check className="h-3 w-3 text-receipt-brown" strokeWidth={3} />
-      ) : (
-        <X className="h-3 w-3 text-red-600" strokeWidth={3} />
-      )}
-      {showLabel && (
-        <span className="text-ink-muted">{isOk ? "Doğru" : "Kontrol et"}</span>
-      )}
+      <Icon className={cn("h-3 w-3", c.icon)} strokeWidth={2.5} />
+      <span className={c.text}>{unread ? "Okunamadı" : `%${rounded}`}</span>
+      {showLabel && !unread && <span className={c.text}>{label}</span>}
     </span>
   );
 }

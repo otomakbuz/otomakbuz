@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ContactsTable } from "@/components/contacts/contacts-table";
 import { ContactFilters } from "@/components/contacts/contact-filters";
+import { SeedContactsButton } from "@/components/contacts/seed-contacts-button";
 import { getContacts } from "@/lib/actions/contacts";
 import { Building2, Plus } from "lucide-react";
 import type { ContactType } from "@/types";
@@ -32,12 +33,15 @@ export default async function RehberPage({ searchParams }: PageProps) {
             <p className="text-sm text-ink-muted">Tedarikçi ve müşterilerinizi yönetin.</p>
           </div>
         </div>
-        <Link href="/rehber/yeni">
-          <Button className="bg-brand hover:bg-brand-dark">
-            <Plus className="h-4 w-4 mr-1.5" />
-            Yeni Firma
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          {contacts.length === 0 && <SeedContactsButton />}
+          <Link href="/rehber/yeni">
+            <Button className="bg-brand hover:bg-brand-dark">
+              <Plus className="h-4 w-4 mr-1.5" />
+              Yeni Firma
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <ContactFilters />

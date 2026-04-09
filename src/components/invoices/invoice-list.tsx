@@ -12,6 +12,9 @@ import {
   Search,
   FilePlus,
   Edit,
+  Send,
+  Link2,
+  Mail,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -56,20 +59,37 @@ function getInvoiceStatus(doc: Document): {
       key: "draft",
     };
   }
-  // Check overdue (simple: issue_date older than 30 days and not paid)
-  if (doc.issue_date) {
+  // Check overdue — due_date varsa ona bak, yoksa issue_date + 30 gün
+  const today = new Date().toISOString().split("T")[0];
+  const dueDate = (doc as unknown as Record<string, unknown>).due_date as string | undefined;
+  if (dueDate && dueDate < today) {
+    return {
+      label: "Vadesi Geçmiş",
+      className: "bg-red-100 text-red-700",
+      key: "overdue",
+    };
+  }
+  if (!dueDate && doc.issue_date) {
     const issueDate = new Date(doc.issue_date);
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    if (
-      issueDate < thirtyDaysAgo &&
-      doc.e_invoice_status !== "delivered" &&
-      doc.notes !== "Ödendi"
-    ) {
+    if (issueDate < thirtyDaysAgo) {
       return {
         label: "Vadesi Geçmiş",
         className: "bg-red-100 text-red-700",
         key: "overdue",
+      };
+    }
+  }
+  // Vade yaklaşıyor — 7 gün içinde
+  if (dueDate) {
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(sevenDaysLater.getDate() + 7);
+    if (dueDate <= sevenDaysLater.toISOString().split("T")[0]) {
+      return {
+        label: "Vade Yakın",
+        className: "bg-orange-100 text-orange-700",
+        key: "due_soon",
       };
     }
   }
@@ -161,6 +181,64 @@ export function InvoiceList({ invoices: initialInvoices, stats }: InvoiceListPro
     setOpenMenuId(null);
   };
 
+  const handleSendEmail = async (doc: Document) => {
+    try {
+      // PDF oluştur
+      const { getCompanyInfo } = await import("@/lib/actions/e-fatura");
+      const company = await getCompanyInfo();
+      const { generateInvoicePdf } = await import("@/lib/invoices/pdf-generator");
+      const blob = await generateInvoicePdf(doc, company);
+
+      // PDF'i indir (kullanıcı e-postaya eklesin)
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fatura_${doc.document_number || doc.id.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      // mailto: aç
+      const buyerEmail = (doc as unknown as Record<string, unknown>).buyer_email as string || "";
+      const subject = encodeURIComponent(`Fatura: ${doc.document_number || ""} - ${company.name || "Otomakbuz"}`);
+      const body = encodeURIComponent(
+        `Sayın ${doc.buyer_name || "Müşteri"},\n\n` +
+        `${doc.document_number || ""} numaralı faturanız ekte yer almaktadır.\n\n` +
+        `Tutar: ${doc.total_amount != null ? formatCurrency(doc.total_amount, doc.currency) : "-"}\n` +
+        `Tarih: ${doc.issue_date || "-"}\n\n` +
+        `İyi çalışmalar,\n${company.name || ""}`
+      );
+      window.open(`mailto:${buyerEmail}?subject=${subject}&body=${body}`, "_self");
+
+      // Gönderildi olarak işaretle
+      await markInvoiceSent(doc.id);
+      toast.success("PDF indirildi ve e-posta açıldı. Fatura gönderildi olarak işaretlendi.");
+      router.refresh();
+    } catch (err) {
+      toast.error("Gönderim başarısız");
+    }
+    setOpenMenuId(null);
+  };
+
+  const handleCopyLink = async (doc: Document) => {
+    const link = `${window.location.origin}/belge/${doc.id}`;
+    try {
+      await navigator.clipboard.writeText(link);
+      toast.success("Fatura linki kopyalandı");
+    } catch {
+      // Fallback
+      const input = document.createElement("input");
+      input.value = link;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      toast.success("Fatura linki kopyalandı");
+    }
+    setOpenMenuId(null);
+  };
+
   const handleDownloadXml = async (id: string) => {
     try {
       const { xml, filename } = await generateEFaturaXml(id);
@@ -234,6 +312,7 @@ export function InvoiceList({ invoices: initialInvoices, stats }: InvoiceListPro
           <option value="issued">Kesildi</option>
           <option value="sent">Gönderildi</option>
           <option value="paid">Ödendi</option>
+          <option value="due_soon">Vade Yakın</option>
           <option value="overdue">Vadesi Geçmiş</option>
         </select>
         <Link href="/fatura-kes">
@@ -336,6 +415,24 @@ export function InvoiceList({ invoices: initialInvoices, stats }: InvoiceListPro
                           </button>
                           {openMenuId === inv.id && (
                             <div className="absolute right-0 top-full mt-1 w-44 bg-popover rounded-lg shadow-lg border border-paper-lines z-50 py-1">
+                              {/* Gönderim seçenekleri */}
+                              <button
+                                type="button"
+                                onClick={() => handleSendEmail(inv)}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface/50 text-left text-receipt-brown font-medium"
+                              >
+                                <Mail className="h-3.5 w-3.5" />
+                                E-posta ile Gönder
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleCopyLink(inv)}
+                                className="w-full flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-surface/50 text-left"
+                              >
+                                <Link2 className="h-3.5 w-3.5" />
+                                Link Kopyala
+                              </button>
+                              <div className="border-t border-paper-lines my-1" />
                               <button
                                 type="button"
                                 onClick={() => handleDownloadPdf(inv)}

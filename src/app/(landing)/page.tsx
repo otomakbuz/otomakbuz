@@ -13,15 +13,15 @@ import { PricingDialog } from "@/components/landing/pricing-dialog";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-paper">
-      {/* Sticky frosted glass navbar */}
-      <nav className="sticky top-0 z-50 bg-paper/80 backdrop-blur-xl border-b border-paper-lines/60">
+      {/* Sticky kahverengi navbar */}
+      <nav className="sticky top-0 z-50 bg-receipt-brown/95 backdrop-blur-xl border-b border-receipt-brown-dark/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Logo />
-          <div className="hidden md:flex items-center gap-8">
-            <Link href="#nasil-calisir" className="text-sm text-ink-muted hover:text-ink transition-colors font-medium">
+          <Logo variant="light" />
+          <div className="hidden md:flex items-center gap-8 text-white">
+            <Link href="#nasil-calisir" className="text-sm text-white/70 hover:text-white transition-colors font-medium">
               Nasıl Çalışır
             </Link>
-            <Link href="#ozellikler" className="text-sm text-ink-muted hover:text-ink transition-colors font-medium">
+            <Link href="#ozellikler" className="text-sm text-white/70 hover:text-white transition-colors font-medium">
               Özellikler
             </Link>
             <PricingDialog>
@@ -30,12 +30,12 @@ export default function LandingPage() {
           </div>
           <div className="flex items-center gap-2">
             <Link href="/giris" className="hidden sm:inline-flex">
-              <Button variant="ghost" size="sm" className="text-ink-muted hover:text-ink font-medium text-sm">
+              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10 font-medium text-sm">
                 Giriş Yap
               </Button>
             </Link>
             <Link href="/kayit">
-              <Button size="sm" className="bg-ink hover:bg-ink-light text-white font-medium text-sm rounded-full px-5">
+              <Button size="sm" className="bg-white hover:bg-white/90 text-receipt-brown font-medium text-sm rounded-full px-5">
                 Ücretsiz Başla
               </Button>
             </Link>
